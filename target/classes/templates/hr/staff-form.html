@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/>
+<title>Staff Form | SwineCore</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+<link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body class="d-flex">
+<th:block th:replace="~{layout/base :: sidebar}"></th:block>
+<div id="main-content" class="flex-grow-1 p-4 overflow-auto">
+    <th:block th:replace="~{layout/base :: alerts}"></th:block>
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/hr/staff}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <h2 class="fw-bold mb-0" th:text="${user.id == null ? 'Create Account' : 'Edit Account'}"></h2>
+    </div>
+    <div class="card border-0 shadow-sm" style="max-width:550px;">
+        <div class="card-body p-4">
+            <div th:if="${user.id == null}" class="alert alert-info small py-2">
+                <i class="bi bi-info-circle me-2"></i>The user will log in and change their password on first login.
+            </div>
+            <form th:action="${user.id == null ? '/hr/staff/create' : '/hr/staff/' + user.id + '/update'}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Name</label>
+                        <input type="text" name="name" class="form-control" th:value="${user.name}" required/>
+                    </div>
+                    <div class="col-12" th:if="${user.id == null}">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input type="email" name="email" class="form-control" required/>
+                    </div>
+                    <div class="col-12" th:if="${user.id == null}">
+                        <label class="form-label fw-semibold">Temporary Password</label>
+                        <input type="password" name="password" class="form-control" required/>
+                    </div>
+                    <div class="col-md-6" th:if="${user.id == null}">
+                        <label class="form-label fw-semibold">Role</label>
+                        <select name="role" class="form-select" required>
+                            <option value="STAFF" th:selected="${defaultRole == 'STAFF'}">STAFF</option>
+                            <option value="SUPERVISOR" th:selected="${defaultRole == 'SUPERVISOR'}">SUPERVISOR</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" th:if="${user.id == null}">
+                        <label class="form-label fw-semibold">Farm</label>
+                        <select id="farmSelect" name="farmId" class="form-select" required>
+                            <option value="">-- Select Farm --</option>
+                            <option th:each="f : ${farms}" th:value="${f.id}" th:text="${f.name}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" th:if="${user.id == null}">
+                        <label class="form-label fw-semibold">Building</label>
+                        <select id="buildingSelect" name="buildingId" class="form-select" required>
+                            <option value="">-- Select Building --</option>
+                            <th:block th:each="entry : ${buildingsByFarm}">
+                                <optgroup th:label="${entry.key.name}">
+                                    <option th:each="b : ${entry.value}" th:value="${b.id}" th:attr="data-farm-id=${entry.key.id},data-supervisor-occupied=${occupiedSupervisorBuildingIds.contains(b.id)}"
+                                            th:text="${b.name}"
+                                            th:selected="${user.building != null && user.building.id == b.id}"></option>
+                                </optgroup>
+                            </th:block>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Phone</label>
+                        <input type="text" name="phone" class="form-control" th:value="${user.phone}"/>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-circle me-2"></i>Save</button>
+                    <a th:href="@{/hr/staff}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+<script>
+const hrFarm=document.getElementById('farmSelect'),hrBuilding=document.getElementById('buildingSelect'),hrRole=document.querySelector('select[name="role"]');
+function filterHrBuildings(){if(!hrBuilding)return;const farm=hrFarm.value,supervisor=hrRole.value==='SUPERVISOR';Array.from(hrBuilding.options).forEach(function(o){if(!o.value)return;const hide=o.dataset.farmId!==farm||(supervisor&&o.dataset.supervisorOccupied==='true');o.hidden=hide;o.disabled=hide;});if(hrBuilding.selectedOptions[0]?.disabled)hrBuilding.value='';}
+if(hrFarm){hrFarm.addEventListener('change',filterHrBuildings);hrRole.addEventListener('change',filterHrBuildings);filterHrBuildings();}
+</script>
+</body>
+</html>

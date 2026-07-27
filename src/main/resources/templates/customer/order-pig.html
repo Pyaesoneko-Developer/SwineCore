@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Pig Order Receipt | SwineCore</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/css/voucher.css}"/>
+    <style>
+        body{background:#eef3ef;color:#17352d;font-family:Arial,sans-serif}.receipt{max-width:900px;margin:36px auto;background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(14,69,51,.13);overflow:hidden}.receipt-head{padding:30px 34px;background:#0f684d;color:#fff}.qr{width:170px;background:#fff;padding:9px;border-radius:15px}.receipt-body{padding:34px}.detail-row{padding:11px 0;border-bottom:1px solid #e7ece9}.total{font-size:1.8rem;color:#0f684d;font-weight:800}@media print{body{background:#fff}.receipt{box-shadow:none;margin:0}.actions{display:none}}
+    </style>
+</head>
+<body>
+<article class="receipt">
+    <header class="receipt-head d-flex justify-content-between align-items-start gap-4">
+        <div><img th:src="@{/images/logo.png}" alt="SwineCore" style="height:46px"/><h1 class="h3 fw-bold mt-3 mb-1">Pig Purchase</h1><div class="opacity-75">SwineCore Farm Co., Ltd.</div></div>
+        <img th:if="${qrCode != null}" th:src="'data:image/png;base64,' + ${qrCode}" class="qr" alt="Dynamic payment QR"/>
+    </header>
+    <div class="receipt-body">
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="detail-row"><small class="text-muted">ORDER ID</small><div class="fw-bold" th:text="${order.orderReference}"></div></div>
+                <div class="detail-row"><small class="text-muted">CUSTOMER</small><div th:text="${order.customer.fullName}"></div></div>
+                <div class="detail-row"><small class="text-muted">FARM</small><div th:text="${order.items[0].pig.building.farm.name}"></div></div>
+                <div class="detail-row"><small class="text-muted">DATE</small><div th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy, HH:mm')}"></div></div>
+            </div>
+            <div class="col-md-5"><div class="p-4 rounded-4 bg-light"><div class="text-muted small">TOTAL AMOUNT</div><div class="total" th:text="${#numbers.formatDecimal(order.totalAmount,0,'COMMA',0,'POINT')} + ' MMK'"></div><span class="badge text-bg-warning mt-2" th:text="${order.status}"></span></div></div>
+        </div>
+        <h2 class="h5 fw-bold mt-4">Voucher details</h2>
+        <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Pig code</th><th>Genetics</th><th class="text-end">Price</th></tr></thead><tbody><tr th:each="item : ${order.items}"><td><code th:text="${item.pig.code}"></code></td><td th:text="${item.pig.genetics.name}"></td><td class="text-end" th:text="${#numbers.formatDecimal(item.unitPrice,0,'COMMA',0,'POINT')} + ' MMK'"></td></tr></tbody></table></div>
+        <div class="d-flex justify-content-end mt-4"><div class="text-center"><img th:src="@{/images/authorized-signature.png}" alt="Authorized signature" style="width:210px;max-height:95px;object-fit:contain"/><div class="border-top pt-1 small fw-bold">Authorized Signature</div><div class="text-muted" style="font-size:.72rem">SWINECORE FARM CO., LTD.</div></div></div>
+        <div class="actions d-flex gap-2 flex-wrap mt-4"><button class="btn btn-success" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print Voucher</button><a th:href="@{/customer/dashboard#orders}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a></div>
+    </div>
+</article>
+<script th:inline="javascript">
+localStorage.removeItem('swinecorePigCart');
+const pigOrderId=/*[[${order.id}]]*/ 0;
+const pigInitialStatus=/*[[${order.status.name()}]]*/ 'PENDING';
+if(!['PAID','DISPATCHED'].includes(pigInitialStatus)){
+  const timer=setInterval(async()=>{try{const response=await fetch('/customer/orders/pig/'+pigOrderId+'/status',{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(['PAID','DISPATCHED'].includes(data.status)){clearInterval(timer);window.location.replace('/customer/dashboard#orders');}}catch(e){}},1500);
+}
+</script>
+</body>
+</html>

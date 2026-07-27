@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/>
+<title>User Form | SwineCore</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+<link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body class="d-flex">
+<th:block th:replace="~{layout/base :: sidebar}"></th:block>
+<div id="main-content" class="flex-grow-1 p-4 overflow-auto">
+    <th:block th:replace="~{layout/base :: alerts}"></th:block>
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/admin/users}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <h2 class="fw-bold mb-0" th:text="${user.id == null ? 'Create User' : 'Edit User'}">User Form</h2>
+    </div>
+    <div class="card border-0 shadow-sm" style="max-width:600px;">
+        <div class="card-body p-4">
+
+            <!-- Role guidance note -->
+            <div id="roleNote" class="alert alert-info small py-2 mb-3 d-none">
+                <i class="bi bi-info-circle me-2"></i>
+                <span id="roleNoteText"></span>
+            </div>
+
+            <form th:action="${user.id == null ? '/admin/users/create' : '/admin/users/' + user.id + '/update'}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Name</label>
+                        <input type="text" name="name" class="form-control" th:value="${user.name}" required/>
+                    </div>
+                    <div class="col-12" th:if="${user.id == null}">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input type="email" name="email" class="form-control" th:value="${user.email}" required/>
+                    </div>
+                    <div class="col-12" th:if="${user.id == null}">
+                        <label class="form-label fw-semibold">Temporary Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="User will change on first login" required/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Role</label>
+                        <select id="roleSelect" name="role" class="form-select" required>
+                            <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"
+                                    th:selected="${user.role == r}"></option>
+                        </select>
+                    </div>
+
+                    <!--
+                        Farm field: only relevant for MANAGER, SUPERVISOR, STAFF.
+                        ADMIN and HR span all farms (farm = null by design).
+                        CUSTOMER accounts are not farm-based either.
+                        JavaScript below handles show/hide; controller enforces server-side.
+                    -->
+                    <div class="col-md-6" id="farmField">
+                        <label class="form-label fw-semibold">Farm</label>
+                        <select name="farmId" class="form-select">
+                            <option value="">-- None --</option>
+                            <option th:each="f : ${farms}" th:value="${f.id}" th:text="${f.name}" th:attr="data-manager-occupied=${managerOccupiedFarmIds.contains(f.id) && (user.farm == null || user.farm.id != f.id)}"
+                                    th:selected="${user.farm != null && user.farm.id == f.id}"></option>
+                        </select>
+                        <div class="form-text">Assign to a specific farm (Manager / Supervisor / Staff only).</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone</label>
+                        <input type="text" name="phone" class="form-control" th:value="${user.phone}"/>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-circle me-2"></i>Save
+                    </button>
+                    <a th:href="@{/admin/users}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+<script>
+    // Roles that should never be tied to a single farm
+    const NO_FARM_ROLES = ['ADMIN', 'HR', 'CUSTOMER'];
+
+    const roleNotes = {
+        ADMIN:    'Admin spans all farms — no farm assignment needed.',
+        HR:       'HR manages staff across all farms — no farm assignment needed.',
+        CUSTOMER: 'Customer accounts are not farm-based — no farm assignment needed.',
+        MANAGER:  'Manager is assigned to one farm.',
+        SUPERVISOR: 'Supervisor is assigned to one building (farm is inferred from building).',
+        STAFF:    'Staff is assigned to one building (farm is inferred from building).'
+    };
+
+    const roleSelect  = document.getElementById('roleSelect');
+    const farmField   = document.getElementById('farmField');
+    const roleNote    = document.getElementById('roleNote');
+    const roleNoteText = document.getElementById('roleNoteText');
+    const farmSelect  = farmField.querySelector('select');
+
+    function updateFarmVisibility() {
+        const role = roleSelect.value;
+        const hideFarm = NO_FARM_ROLES.includes(role);
+
+        if (hideFarm) {
+            farmField.style.display = 'none';
+            farmSelect.value = '';          // clear so no farm is submitted
+            roleNote.classList.remove('d-none');
+            roleNoteText.textContent = roleNotes[role] || '';
+        } else {
+            farmField.style.display = '';
+            roleNote.classList.add('d-none');
+            if (roleNotes[role]) {
+                roleNoteText.textContent = roleNotes[role];
+                roleNote.classList.remove('d-none');
+            }
+        }
+        Array.from(farmSelect.options).forEach(function(option){
+            if(!option.value)return;
+            const unavailable=role==='MANAGER' && option.dataset.managerOccupied==='true';
+            option.hidden=unavailable; option.disabled=unavailable;
+        });
+        farmSelect.required = role === 'MANAGER';
+    }
+
+    roleSelect.addEventListener('change', updateFarmVisibility);
+    // Run on page load so edit-mode reflects the saved role
+    updateFarmVisibility();
+</script>
+</body>
+</html>

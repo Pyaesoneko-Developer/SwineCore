@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Factory Feed Reports | SwineCore</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
+
+    <style>
+        .shipment-search {
+            width: 280px;
+            height: 42px;
+            border-radius: 12px;
+        }
+
+        .shipment-action-wrap {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .shipment-action-btn {
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .shipment-pagination-footer {
+            padding: 1.25rem;
+            border-top: 1px solid #eef2f0;
+        }
+
+        .shipment-pagination-info {
+            text-align: center;
+            margin-bottom: .75rem;
+            color: #6c757d;
+            font-size: .875rem;
+        }
+
+        .shipment-pagination-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shipment-pagination {
+            display: flex;
+            gap: .55rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 0;
+        }
+
+        .shipment-pagination .page-item .page-link {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 14px;
+            border: 1px solid #d7e7dc;
+            background: #ffffff;
+            color: #1f7a4d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .shipment-pagination .page-item .page-link:hover {
+            background: #f3faf6;
+            border-color: #8fc7a7;
+            color: #146c43;
+        }
+
+        .shipment-pagination .page-item.active .page-link {
+            background: #198754;
+            border-color: #198754;
+            color: #ffffff;
+        }
+
+        .shipment-pagination .page-item.disabled .page-link {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+            color: #9aa4ad;
+            pointer-events: none;
+        }
+
+        @media (max-width: 992px) {
+            .shipment-header-wrap {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 1rem;
+            }
+
+            .shipment-search {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex">
+    <th:block th:replace="~{layout/base :: sidebar}"></th:block>
+
+    <main id="main-content" class="flex-grow-1 p-4 overflow-auto">
+        <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 shipment-header-wrap">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-truck me-2 text-success"></i>
+                    Factory Feed Reports
+                </h2>
+
+                <p class="text-muted mb-0">
+                    Confirm matched factory reports or reject mismatches for manager review.
+                </p>
+            </div>
+
+            <input type="search" id="shipmentSearchInput" class="form-control shipment-search"
+                placeholder="Search reports..." />
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="supervisorShipmentTable"
+                    data-no-live-search="true">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Factory Report</th>
+                            <th>Destination</th>
+                            <th>Expected</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Supervisor Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr th:each="s : ${shipments}" class="shipment-row">
+                            <td class="shipment-row-number">1.</td>
+
+                            <td>
+                                <strong th:text="${s.supplierName}">Supplier</strong>
+                                <br />
+
+                                <small class="text-muted" th:text="${s.invoiceNumber} + ' · ' + ${s.shipmentDate}">
+                                    INV · Date
+                                </small>
+                            </td>
+
+                            <td>
+                                <span th:text="${s.farm != null ? s.farm.name : '-'}">Farm</span>
+                                <br />
+
+                                <small th:text="${building != null ? building.name : '-'}">Building</small>
+                            </td>
+
+                            <td>
+                                <strong th:text="${s.displayFeedType}">Feed Type</strong>
+                                <br />
+
+                                <span th:text="${s.dispatchQuantityKg} + ' kg'">0 kg</span>
+                            </td>
+
+                            <td>
+                                <span th:text="${s.pricePerKg} + ' MMK / kg'">0 MMK / kg</span>
+                                <br />
+
+                                <strong class="text-success" th:text="'Total ' + ${s.totalAmount} + ' MMK'">
+                                    Total 0 MMK
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span th:if="${s.overrideStatus.name() == 'PENDING_VERIFICATION'}"
+                                    class="badge bg-warning text-dark">
+                                    Pending Supervisor Confirm
+                                </span>
+
+                                <span th:if="${s.overrideStatus.name() == 'AUTO_APPROVED'}" class="badge bg-success">
+                                    Confirmed · Expense Released
+                                </span>
+
+                                <span th:if="${s.overrideStatus.name() == 'PENDING_MANAGER_OVERRIDE'}"
+                                    class="badge bg-warning text-dark">
+                                    Rejected · Manager Review
+                                </span>
+
+                                <span th:if="${s.overrideStatus.name() == 'CONFIRMED'}" class="badge bg-success">
+                                    Manager Confirmed
+                                </span>
+
+                                <span th:if="${s.overrideStatus.name() == 'REJECTED'}" class="badge bg-danger">
+                                    Rejected
+                                </span>
+
+                                <div th:if="${s.managerOverrideReason != null && !s.managerOverrideReason.isBlank()}"
+                                    class="small text-muted mt-1">
+                                    Reason:
+                                    <span th:text="${s.managerOverrideReason}">Reason</span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div th:if="${s.overrideStatus.name() == 'PENDING_VERIFICATION'}"
+                                    class="shipment-action-wrap">
+
+                                    <button type="button" class="btn btn-sm btn-success shipment-action-btn"
+                                        data-bs-toggle="modal"
+                                        th:attr="data-bs-target=${'#confirmShipmentModal__' + s.id}">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Confirm
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger shipment-action-btn"
+                                        data-bs-toggle="modal"
+                                        th:attr="data-bs-target=${'#rejectShipmentModal__' + s.id}">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        Reject
+                                    </button>
+                                </div>
+
+                                <span th:unless="${s.overrideStatus.name() == 'PENDING_VERIFICATION'}"
+                                    class="text-muted small">
+                                    No action
+                                </span>
+                            </td>
+                        </tr>
+
+                        <tr th:if="${shipments == null || #lists.isEmpty(shipments)}">
+                            <td colspan="7" class="text-center text-muted py-5">
+                                No factory reports for this building.
+                            </td>
+                        </tr>
+
+                        <tr id="shipmentNoResultRow" class="d-none">
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <i class="bi bi-search me-2"></i>
+                                No factory reports match your search.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${shipments != null && !#lists.isEmpty(shipments)}"
+                class="card-footer bg-transparent shipment-pagination-footer">
+                <div class="shipment-pagination-info" id="shipmentPaginationInfo">
+                    Showing 0 to 0 of 0 reports
+                </div>
+
+                <div class="shipment-pagination-wrap">
+                    <nav aria-label="Shipment pagination">
+                        <ul class="pagination shipment-pagination" id="shipmentPagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Modals -->
+        <th:block th:if="${shipments != null}">
+            <th:block th:each="s : ${shipments}">
+                <div th:if="${s.overrideStatus.name() == 'PENDING_VERIFICATION'}" class="modal fade"
+                    th:id="${'confirmShipmentModal__' + s.id}" tabindex="-1" aria-hidden="true">
+
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content glass-modal">
+                            <form th:action="@{/supervisor/shipments/{id}/confirm(id=${s.id})}" method="post">
+
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold text-success">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Confirm Factory Feed Report
+                                    </h5>
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <p class="mb-2">
+                                        Confirm factory report:
+                                        <code th:text="${s.invoiceNumber}">INV</code>
+                                    </p>
+
+                                    <div class="border rounded-3 p-3 mb-3 bg-light">
+                                        <div class="small text-muted">Supplier</div>
+                                        <div class="fw-semibold" th:text="${s.supplierName}">Supplier</div>
+
+                                        <div class="small text-muted mt-2">Feed / Quantity</div>
+                                        <div class="fw-semibold">
+                                            <span th:text="${s.displayFeedType}">Feed</span>
+                                            ·
+                                            <span th:text="${s.dispatchQuantityKg} + ' kg'">0 kg</span>
+                                        </div>
+
+                                        <div class="small text-muted mt-2">Total Expense</div>
+                                        <div class="fw-bold text-success" th:text="${s.totalAmount} + ' MMK'">
+                                            0 MMK
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-success mb-0">
+                                        Confirming will release feed expense to the factory.
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Confirm & Release Expense
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+        </th:block>
+
+        <!-- Reject Modals -->
+        <th:block th:if="${shipments != null}">
+            <th:block th:each="s : ${shipments}">
+                <div th:if="${s.overrideStatus.name() == 'PENDING_VERIFICATION'}" class="modal fade"
+                    th:id="${'rejectShipmentModal__' + s.id}" tabindex="-1" aria-hidden="true">
+
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content glass-modal">
+                            <form th:action="@{/supervisor/shipments/{id}/reject(id=${s.id})}" method="post">
+
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold text-danger">
+                                        <i class="bi bi-x-circle me-2"></i>
+                                        Reject Factory Feed Report
+                                    </h5>
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <p class="mb-3">
+                                        Reject factory report:
+                                        <code th:text="${s.invoiceNumber}">INV</code>
+                                    </p>
+
+                                    <div class="border rounded-3 p-3 mb-3 bg-light">
+                                        <div class="small text-muted">Supplier</div>
+                                        <div class="fw-semibold" th:text="${s.supplierName}">Supplier</div>
+
+                                        <div class="small text-muted mt-2">Feed / Quantity</div>
+                                        <div class="fw-semibold">
+                                            <span th:text="${s.displayFeedType}">Feed</span>
+                                            ·
+                                            <span th:text="${s.dispatchQuantityKg} + ' kg'">0 kg</span>
+                                        </div>
+
+                                        <div class="small text-muted mt-2">Total Expense</div>
+                                        <div class="fw-bold text-danger" th:text="${s.totalAmount} + ' MMK'">
+                                            0 MMK
+                                        </div>
+                                    </div>
+
+                                    <label class="form-label fw-semibold">
+                                        Reject Reason
+                                    </label>
+
+                                    <textarea name="reason" class="form-control" rows="3"
+                                        placeholder="Enter reason for manager review..." required></textarea>
+
+                                    <div class="alert alert-warning mt-3 mb-0">
+                                        Expense will not be released. This report will be sent to manager review.
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        Reject & Send to Manager
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+        </th:block>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = Array.from(document.querySelectorAll('.shipment-row'));
+            const searchInput = document.getElementById('shipmentSearchInput');
+            const noResultRow = document.getElementById('shipmentNoResultRow');
+            const pagination = document.getElementById('shipmentPagination');
+            const paginationInfo = document.getElementById('shipmentPaginationInfo');
+
+            const pageSize = 10;
+            let currentPage = 1;
+            let filteredRows = [];
+
+            function rowMatchesSearch(row) {
+                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                return !query || row.innerText.toLowerCase().includes(query);
+            }
+
+            function calculateFilteredRows() {
+                filteredRows = rows.filter(function (row) {
+                    return rowMatchesSearch(row);
+                });
+            }
+
+            function renderRows() {
+                rows.forEach(function (row) {
+                    row.style.display = 'none';
+                });
+
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, total);
+
+                filteredRows.slice(startIndex, endIndex).forEach(function (row, index) {
+                    row.style.display = '';
+
+                    const numberCell = row.querySelector('.shipment-row-number');
+                    if (numberCell) {
+                        numberCell.textContent = (startIndex + index + 1) + '.';
+                    }
+                });
+
+                if (noResultRow) {
+                    noResultRow.classList.toggle('d-none', total > 0 || rows.length === 0);
+                }
+
+                if (paginationInfo) {
+                    paginationInfo.textContent = total === 0
+                        ? 'Showing 0 to 0 of 0 reports'
+                        : 'Showing ' + (startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' reports';
+                }
+
+                renderPagination(totalPages);
+            }
+
+            function createPageItem(label, disabled, active, clickHandler) {
+                const li = document.createElement('li');
+                li.className = 'page-item'
+                    + (disabled ? ' disabled' : '')
+                    + (active ? ' active' : '');
+
+                const btn = document.createElement('button');
+                btn.className = 'page-link';
+                btn.type = 'button';
+                btn.innerHTML = label;
+
+                if (!disabled && typeof clickHandler === 'function') {
+                    btn.addEventListener('click', clickHandler);
+                }
+
+                li.appendChild(btn);
+                return li;
+            }
+
+            function renderPagination(totalPages) {
+                if (!pagination) {
+                    return;
+                }
+
+                pagination.innerHTML = '';
+
+                if (filteredRows.length <= pageSize) {
+                    return;
+                }
+
+                pagination.appendChild(createPageItem('<i class="bi bi-chevron-left"></i>', currentPage === 1, false, function () {
+                    currentPage--;
+                    renderRows();
+                }));
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                        pagination.appendChild(createPageItem(String(i), false, i === currentPage, function () {
+                            currentPage = i;
+                            renderRows();
+                        }));
+                    } else if (i === currentPage - 3 || i === currentPage + 3) {
+                        pagination.appendChild(createPageItem('...', true, false, null));
+                    }
+                }
+
+                pagination.appendChild(createPageItem('<i class="bi bi-chevron-right"></i>', currentPage === totalPages, false, function () {
+                    currentPage++;
+                    renderRows();
+                }));
+            }
+
+            function applyTable() {
+                currentPage = 1;
+                calculateFilteredRows();
+                renderRows();
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applyTable);
+            }
+
+            calculateFilteredRows();
+            renderRows();
+        });
+    </script>
+</body>
+
+</html>

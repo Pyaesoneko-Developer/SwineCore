@@ -1,0 +1,49 @@
+admin@swinecore.mm                  / 123123
+hr@swinecore.mm                     / 123123
+
+manager.hmawbi@swinecore.mm         / 123123
+supervisor.hmawbi@swinecore.mm      / 123123
+staff.hmawbi.breeding@swinecore.mm  / 123123
+staff.hmawbi.grower@swinecore.mm    / 123123
+
+manager.bago@swinecore.mm           / 123123
+supervisor.bago@swinecore.mm        / 123123
+staff.bago.breeding@swinecore.mm    / 123123
+staff.bago.grower@swinecore.mm      / 123123
+
+buyer.yangon@swinecore.mm           / 123123
+
+
+Admin / HR
+admin@swinecore.mm
+password: 123123
+hr@swinecore.mm
+password: 123123
+
+Hmawbi Farm
+manager.hmawbi@swinecore.mm
+password: 123123
+supervisor.hmawbi.breeding@swinecore.mm
+password: 123123
+staff.hmawbi.breeding@swinecore.mm
+password: 123123
+supervisor.hmawbi.grower@swinecore.mm
+password: 123123
+staff.hmawbi.grower@swinecore.mm
+password: 123123
+
+Bago Farm
+manager.bago@swinecore.mm
+password: 123123
+supervisor.bago.breeding@swinecore.mm
+password: 123123
+staff.bago.breeding@swinecore.mm
+password: 123123
+supervisor.bago.grower@swinecore.mm
+password: 123123
+staff.bago.grower@swinecore.mm
+password: 123123
+
+Customer
+buyer.yangon@swinecore.mm
+password: 123123

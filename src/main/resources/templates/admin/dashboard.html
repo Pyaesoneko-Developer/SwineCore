@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/base :: head}"></head>
+<body class="d-flex">
+<th:block th:replace="~{layout/base :: sidebar}"></th:block>
+<div id="main-content" class="flex-grow-1 p-4 overflow-auto">
+    <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+    <h2 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2 text-success"></i>Administration Overview</h2>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-success" th:text="${summary['totalFarms']}">0</div>
+                    <div class="text-muted small">Farms</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-primary" th:text="${summary['totalBuildings']}">0</div>
+                    <div class="text-muted small">Buildings</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-info" th:text="${summary['totalUsers']}">0</div>
+                    <div class="text-muted small">Users</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-warning" th:text="${summary['totalPigs']}">0</div>
+                    <div class="text-muted small">Total Pigs</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-danger" th:text="${summary['totalSold']}">0</div>
+                    <div class="text-muted small">Sold</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-secondary" th:text="${summary['totalForSale']}">0</div>
+                    <div class="text-muted small">For Sale</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pig Distribution Chart -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent fw-semibold">Pig Distribution by Farm</div>
+                <div class="card-body"><canvas id="pigDistChart" height="200"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent fw-semibold">Farms Overview</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light"><tr><th>Farm</th><th>Code</th><th>Location</th><th></th></tr></thead>
+                            <tbody>
+                            <tr th:each="farm : ${farms}">
+                                <td th:text="${farm.name}"></td>
+                                <td><code th:text="${farm.code}"></code></td>
+                                <td th:text="${farm.location}"></td>
+                                <td><a th:href="@{/admin/farms/__${farm.id}__}" class="btn btn-sm btn-outline-primary">View</a></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(farms)}">
+                                <td colspan="4" class="text-center text-muted">No farms yet. <a th:href="@{/admin/farms/new}">Create one</a>.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <script th:inline="javascript">
+        const cs = getComputedStyle(document.documentElement);
+        const greenColor = cs.getPropertyValue('--brand-gradient-start').trim() || '#198754';
+        const labels = /*[[${pigDist.keySet()}]]*/ [];
+        const data   = /*[[${pigDist.values()}]]*/ [];
+        new Chart(document.getElementById('pigDistChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Active Pigs', data: data,
+                    backgroundColor: greenColor + 'b3', borderRadius: 4 }]
+            },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    </script> -->
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const chartCanvas = document.getElementById('pigDistChart');
+
+        if (chartCanvas && window.Chart) {
+            const cs = getComputedStyle(document.documentElement);
+            const greenColor = cs.getPropertyValue('--brand-gradient-start').trim() || '#198754';
+
+            const labels = /*[[${pigDist.keySet()}]]*/ [];
+            const data = /*[[${pigDist.values()}]]*/ [];
+
+            new Chart(chartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Active Pigs',
+                        data: data,
+                        backgroundColor: greenColor,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

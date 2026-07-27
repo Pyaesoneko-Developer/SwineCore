@@ -1,0 +1,26 @@
+2026-07-16T23:58:09.972+06:30  INFO 10464 --- [SwineCore] [main] c.e.swinecore.SwineCoreApplication       : Starting SwineCoreApplication v1.0.0 using Java 21.0.10 with PID 10464 (C:\Users\PSK\Documents\Codex\2026-07-16\files-mentioned-by-the-user-doctype\work\swinecore-integrated\target\swinecore-1.0.0.jar started by Lenovo in C:\Users\PSK\Documents\Codex\2026-07-16\files-mentioned-by-the-user-doctype\work\swinecore-integrated)
+2026-07-16T23:58:09.977+06:30  INFO 10464 --- [SwineCore] [main] c.e.swinecore.SwineCoreApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-07-16T23:58:12.146+06:30  INFO 10464 --- [SwineCore] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-16T23:58:12.386+06:30  INFO 10464 --- [SwineCore] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 224 ms. Found 21 JPA repository interfaces.
+2026-07-16T23:58:14.159+06:30  INFO 10464 --- [SwineCore] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8095 (http)
+2026-07-16T23:58:14.193+06:30  INFO 10464 --- [SwineCore] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-16T23:58:14.194+06:30  INFO 10464 --- [SwineCore] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-16T23:58:14.276+06:30  INFO 10464 --- [SwineCore] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-07-16T23:58:14.277+06:30  INFO 10464 --- [SwineCore] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4162 ms
+2026-07-16T23:58:14.781+06:30  INFO 10464 --- [SwineCore] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-16T23:58:15.019+06:30  INFO 10464 --- [SwineCore] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-07-16T23:58:15.136+06:30  INFO 10464 --- [SwineCore] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-16T23:58:15.903+06:30  INFO 10464 --- [SwineCore] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-16T23:58:15.975+06:30  INFO 10464 --- [SwineCore] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-16T23:58:16.301+06:30  INFO 10464 --- [SwineCore] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2f5f5bc9
+2026-07-16T23:58:16.304+06:30  INFO 10464 --- [SwineCore] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-16T23:58:16.376+06:30  WARN 10464 --- [SwineCore] [main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-16T23:58:19.000+06:30  INFO 10464 --- [SwineCore] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-16T23:58:19.391+06:30  INFO 10464 --- [SwineCore] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-16T23:58:20.257+06:30  INFO 10464 --- [SwineCore] [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-16T23:58:23.865+06:30  WARN 10464 --- [SwineCore] [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-07-16T23:58:25.819+06:30  INFO 10464 --- [SwineCore] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8095 (http) with context path '/'
+2026-07-16T23:58:25.885+06:30  INFO 10464 --- [SwineCore] [main] c.e.swinecore.SwineCoreApplication       : Started SwineCoreApplication in 17.256 seconds (process running for 18.462)
+2026-07-16T23:59:28.640+06:30  INFO 10464 --- [SwineCore] [http-nio-0.0.0.0-8095-exec-4] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-16T23:59:28.641+06:30  INFO 10464 --- [SwineCore] [http-nio-0.0.0.0-8095-exec-4] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-16T23:59:28.643+06:30  INFO 10464 --- [SwineCore] [http-nio-0.0.0.0-8095-exec-4] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms

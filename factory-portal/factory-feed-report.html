@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Factory Feed Dispatch Portal</title>
+    <style>
+        :root {
+            --brand: #126448;
+            --ink: #18352c;
+            --muted: #667a73;
+            --bg: #eff4f0
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 15px Arial, sans-serif
+        }
+
+        .top {
+            padding: 34px max(22px, 6vw);
+            background: linear-gradient(135deg, #0c4936, #187455);
+            color: #fff
+        }
+
+        .top h1 {
+            margin: 0 0 7px
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 28px auto;
+            padding: 0 20px
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.35fr;
+            gap: 20px
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 12px 35px #173d3020
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin: 13px 0 6px
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd8d1;
+            border-radius: 10px;
+            font: inherit
+        }
+
+        button {
+            margin-top: 18px;
+            background: var(--brand);
+            color: #fff;
+            border: 0;
+            font-weight: 700;
+            cursor: pointer
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        .msg {
+            width: 62px;
+            height: 62px;
+            margin: 15px auto 0;
+            padding: 8px;
+            border-radius: 13px;
+            display: none;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 46px
+        }
+
+        .ok {
+            display: block;
+            background: #dff5e9;
+            color: #135a40
+        }
+
+        .err {
+            display: block;
+            background: #fde4e1;
+            color: #8b2d22
+        }
+
+        .alert {
+            padding: 12px;
+            border-left: 4px solid #d99b20;
+            background: #fff5d8;
+            margin: 9px 0;
+            border-radius: 8px
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        @media(max-width:760px) {
+
+            .grid,
+            .row {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top">
+        <h1>Factory Feed Dispatch Portal</h1>
+        <div>Submit delivery reports directly to SwineCore.</div>
+    </header>
+    <main class="wrap">
+        <div class="grid">
+            <section>
+                <div class="card">
+                    <h2>Connection</h2><label>SwineCore URL</label><input id="apiBase"
+                        value="http://localhost:8080" /><button type="button" onclick="connect()">Connect & Load
+                        Farms</button>
+                    <div id="connectionMsg" class="msg" aria-live="polite"></div>
+                </div>
+                <div class="card" style="margin-top:20px">
+                    <h2>Stock shortage requests</h2>
+                    <div id="alerts" class="muted">Connect to load current requests.</div>
+                </div>
+                <div class="card" style="margin-top:20px">
+                    <h2>Rejected reports</h2><label>Factory/Supplier Name</label><input id="rejectionSupplier"
+                        placeholder="Enter the same supplier name" /><button type="button"
+                        onclick="loadRejections()">Check rejection notices</button>
+                    <div id="rejections" class="muted" style="margin-top:12px"></div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>New feed dispatch report</h2>
+                <form id="reportForm">
+                    <div class="row">
+                        <div><label>Farm</label><select id="farmId" required onchange="loadBuildings()">
+                                <option value="">Connect first</option>
+                            </select></div>
+                        <div><label>Building</label><select id="buildingId" required>
+                                <option value="">Select farm first</option>
+                            </select></div>
+                    </div><label>Feed Type</label><input id="feedType" required placeholder="e.g. Starter Feed" />
+                    <div class="row">
+                        <div><label>Quantity Delivered (kg)</label><input id="quantityKg" type="number" min="0.01"
+                                step="0.01" required /></div>
+                        <div><label>Price per 1 kg</label><input id="pricePerKg" type="number" min="0.01" step="0.01"
+                                required /></div>
+                    </div>
+                    <div class="row">
+                        <div><label>Factory/Supplier Name</label><input id="supplierName" required /></div>
+                        <div><label>Invoice Number</label><input id="invoiceNumber" required /></div>
+                    </div><label>Shipment Date</label><input id="shipmentDate" type="date" required /><button>Submit
+                        Dispatch Report</button>
+                    <div id="reportMsg" class="msg" aria-live="polite"></div>
+                </form>
+            </section>
+        </div>
+    </main>
+    <script>
+        let catalog = []; const el = id => document.getElementById(id); el('shipmentDate').value = new Date().toISOString().slice(0, 10);
+        function headers() { return { 'Content-Type': 'application/json' } } function base() { return el('apiBase').value.replace(/\/$/, '') }
+        function show(id, ok) { const e = el(id); e.textContent = ok ? '✓' : '✕'; e.setAttribute('aria-label', ok ? 'Success' : 'Error'); e.className = 'msg ' + (ok ? 'ok' : 'err') }
+        async function connect() { try { const r = await fetch(base() + '/api/factory/catalog'); const d = await r.json(); if (!r.ok) throw Error(); catalog = d; el('farmId').innerHTML = '<option value="">Choose farm</option>' + d.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); show('connectionMsg', true); loadAlerts() } catch (e) { show('connectionMsg', false) } }
+        function loadBuildings() { const farm = catalog.find(x => String(x.id) === el('farmId').value); el('buildingId').innerHTML = '<option value="">Choose building</option>' + ((farm && farm.buildings) || []).map(x => `<option value="${x.id}">${x.name} [${x.code}]</option>`).join('') }
+        async function loadAlerts() { try { const r = await fetch(base() + '/api/factory/stock-shortages'); const d = await r.json(); el('alerts').innerHTML = d.length ? d.map(x => `<div class="alert"><b>${x.farm} / ${x.building}</b><br>${x.feedType}: ${x.quantityKg} kg remaining · ${Number(x.dailyConsumptionKg).toFixed(2)} kg/day · ${Number(x.remainingDays).toFixed(1)} days left</div>`).join('') : 'No current stock shortage request.' } catch (e) { el('alerts').innerHTML = '<div class="msg err" style="display:block">✕</div>' } }
+        el('reportForm').addEventListener('submit', async e => { e.preventDefault(); const body = { farmId: +el('farmId').value, buildingId: +el('buildingId').value, feedType: el('feedType').value, quantityKg: +el('quantityKg').value, pricePerKg: +el('pricePerKg').value, supplierName: el('supplierName').value, invoiceNumber: el('invoiceNumber').value, shipmentDate: el('shipmentDate').value }; try { const r = await fetch(base() + '/api/factory/reports', { method: 'POST', headers: headers(), body: JSON.stringify(body) }); if (!r.ok) throw Error(); show('reportMsg', true); e.target.reset(); el('shipmentDate').value = new Date().toISOString().slice(0, 10) } catch (e) { show('reportMsg', false) } });
+        async function loadRejections() { try { const name = el('rejectionSupplier').value.trim(); const r = await fetch(base() + '/api/factory/rejections?supplierName=' + encodeURIComponent(name)); const d = await r.json(); if (!r.ok) throw Error(); el('rejections').innerHTML = d.length ? d.map(x => `<div class="alert"><b>${x.invoiceNumber}</b> · ${x.farmName} / ${x.buildingName}<br>${x.reason}</div>`).join('') : 'No rejection notice.' } catch (e) { el('rejections').innerHTML = '<div class="msg err" style="display:block">✕</div>' } }
+    </script>
+</body>
+
+</html>

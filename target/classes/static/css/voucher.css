@@ -1,0 +1,180 @@
+:root {
+    --voucher-green: #05642f;
+    --voucher-deep: #034d25;
+    --voucher-line: #a9bbb0
+}
+
+body {
+    margin: 0;
+    background: #edf3ef;
+    color: #17241c;
+    font-family: Inter, "Noto Sans Myanmar", "Segoe UI", Arial, sans-serif
+}
+
+.receipt {
+    max-width: 1080px;
+    margin: 26px auto;
+    background: #fff;
+    border: 5px solid var(--voucher-deep);
+    border-radius: 0 !important;
+    box-shadow: 0 22px 70px rgba(2, 54, 25, .14);
+    overflow: hidden
+}
+
+.receipt-head {
+    padding: 24px 28px !important;
+    background: #fff !important;
+    color: #122319 !important;
+    border-bottom: 2px solid var(--voucher-green);
+    display: grid !important;
+    grid-template-columns: 1fr 1.5fr 220px;
+    align-items: start !important
+}
+
+.receipt-head>div:first-child img {
+    height: 76px !important
+}
+
+.receipt-head h1 {
+    text-align: center;
+    color: #050505;
+    font-size: 2rem !important;
+    margin: .35rem 0 !important
+}
+
+.receipt-head h1:before {
+    display: block;
+    font-size: 2.35rem;
+    font-weight: 800
+}
+
+.receipt-head h1:after {
+    content: " (Payment Voucher)";
+    display: block;
+    color: var(--voucher-green);
+    font-size: 1.15rem;
+    margin-top: 6px
+}
+
+.receipt-head>div:first-child div {
+    color: #5d6a62 !important;
+    text-align: center
+}
+
+.qr {
+    grid-column: 3;
+    width: 190px !important;
+    border: 1px solid var(--voucher-line);
+    border-radius: 0 !important;
+    padding: 10px !important;
+    justify-self: end
+}
+
+.receipt-body {
+    padding: 24px 28px 28px !important
+}
+
+.detail-row {
+    padding: 10px 0 !important;
+    border-bottom: 1px solid #dce5df !important
+}
+
+.detail-row small, .text-muted {
+    color: #53645a !important
+}
+
+.total {
+    font-size: 2rem !important;
+    color: var(--voucher-green) !important
+}
+
+.receipt .bg-light {
+    background: #f4f8f5 !important;
+    border: 1px solid var(--voucher-line);
+    border-radius: 10px !important
+}
+
+.receipt table {
+    border: 1px solid var(--voucher-line)
+}
+
+.receipt table thead th {
+    background: var(--voucher-green) !important;
+    color: #fff !important
+}
+
+.receipt table td, .receipt table th {
+    border: 1px solid #d7e0da;
+    padding: 11px
+}
+
+.receipt .badge {
+    background: var(--voucher-green) !important;
+    color: #fff !important;
+    font-size: .8rem
+}
+
+.receipt-body:after {
+    content: "ကျေးဇူးတင်ပါသည်";
+    display: block;
+    margin: 20px 250px 0 0;
+    padding: 14px;
+    border: 1px solid var(--voucher-line);
+    color: var(--voucher-green);
+    font-weight: 800;
+    text-align: center;
+    border-radius: 10px
+}
+
+.actions {
+    border-top: 1px solid #dce5df;
+    padding-top: 18px
+}
+
+@media(max-width:760px) {
+    .receipt {
+        margin: 0;
+        border-width: 2px
+    }
+
+    .receipt-head {
+        grid-template-columns: 1fr 150px
+    }
+
+    .receipt-head h1 {
+        font-size: 1.25rem !important
+    }
+
+    .receipt-head h1:before {
+        font-size: 1.5rem
+    }
+
+    .qr {
+        grid-column: 2;
+        width: 140px !important
+    }
+
+    .receipt-body {
+        padding: 18px !important
+    }
+
+    .receipt-body:after {
+        margin-right: 0
+    }
+}
+
+@media print {
+    body {
+        background: #fff
+    }
+
+    .receipt {
+        margin: 0;
+        max-width: none;
+        box-shadow: none
+    }
+
+    .actions {
+        display: none !important
+    }
+}

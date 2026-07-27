@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Buildings | SwineCore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
+
+    <style>
+        .building-card {
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+            overflow: hidden;
+        }
+
+        .building-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            flex-wrap: nowrap;
+        }
+
+        .building-title-block {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .building-header-actions {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: nowrap;
+            margin-left: auto;
+            flex: 0 0 auto;
+        }
+
+        .building-search {
+            width: 280px;
+            height: 42px;
+            border-radius: 12px;
+        }
+
+        .building-table th,
+        .building-table td {
+            vertical-align: middle;
+            white-space: nowrap;
+            padding: .85rem;
+        }
+
+        .building-action-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: .45rem;
+            flex-wrap: wrap;
+        }
+
+        .building-pagination-footer {
+            padding: 1.25rem;
+        }
+
+        .building-pagination-info {
+            text-align: center;
+            margin-bottom: .75rem;
+        }
+
+        .building-pagination {
+            display: flex;
+            gap: .55rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 0;
+        }
+
+        .building-pagination .page-item .page-link {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 14px;
+            border: 1px solid #d7e7dc;
+            background: #ffffff;
+            color: #198754;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .building-pagination .page-item.active .page-link {
+            background: #198754;
+            border-color: #198754;
+            color: #ffffff;
+        }
+
+        .building-pagination .page-item.disabled .page-link {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+            color: #9aa4ad;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .building-page-header {
+                flex-wrap: wrap;
+                align-items: stretch;
+            }
+
+            .building-title-block {
+                width: 100%;
+            }
+
+            .building-header-actions {
+                width: 100%;
+                margin-left: 0;
+                flex-wrap: wrap;
+            }
+
+            .building-search {
+                width: 100%;
+            }
+
+            .building-header-actions .btn {
+                width: 100%;
+            }
+
+            .building-action-group {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex">
+
+    <th:block th:replace="~{layout/base :: sidebar}"></th:block>
+
+    <div id="main-content" class="flex-grow-1 p-4 overflow-auto">
+
+        <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+        <div class="building-page-header mb-4">
+            <div class="building-title-block">
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-buildings me-2 text-success"></i>
+                    Buildings
+                </h2>
+
+                <div class="text-muted small">
+                    Manage farm buildings and view assigned staff.
+                </div>
+            </div>
+
+            <div class="building-header-actions">
+                <input type="text" id="buildingSearchInput" class="form-control building-search"
+                    placeholder="Search buildings..." />
+
+                <button type="button" class="btn btn-success text-nowrap" data-bs-toggle="modal"
+                    data-bs-target="#addBuildingModal">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Add Building
+                </button>
+            </div>
+        </div>
+
+        <!-- Building Table -->
+        <div class="card building-card">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-list-ul me-2 text-success"></i>
+                        Building List
+                    </h6>
+
+                    <small class="text-muted">
+                        Total:
+                        <span th:text="${buildings != null ? #lists.size(buildings) : 0}">0</span>
+                    </small>
+                </div>
+            </div>
+
+            <div th:if="${buildings == null || #lists.isEmpty(buildings)}" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                No buildings yet.
+            </div>
+
+            <div th:if="${buildings != null && !#lists.isEmpty(buildings)}" class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0 building-table" id="buildingTable"
+                    data-no-live-search="true">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Building</th>
+                            <th>Code</th>
+                            <th>Supervisor</th>
+                            <th>Staff Count</th>
+                            <th>Active Pigs</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr th:each="b : ${buildings}" class="building-row">
+                            <td class="building-row-number">1.</td>
+
+                            <td class="fw-semibold" th:text="${b.name}">
+                                Building
+                            </td>
+
+                            <td>
+                                <code th:text="${b.code}">CODE</code>
+                            </td>
+
+                            <td>
+                                <span th:if="${b.currentSupervisor != null}" th:text="${b.currentSupervisor.fullName}">
+                                    Supervisor
+                                </span>
+
+                                <span th:unless="${b.currentSupervisor != null}" class="text-muted small">
+                                    Unassigned
+                                </span>
+                            </td>
+
+                            <td th:text="${b.staff != null ? b.staff.size() : 0}">
+                                0
+                            </td>
+
+                            <td th:text="${b.pigs != null ? b.pigs.size() : 0}">
+                                0
+                            </td>
+
+                            <td class="text-end">
+                                <div class="building-action-group">
+                                    <!-- <a th:href="@{/manager/buildings/__${b.id}__}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>
+                                        View
+                                    </a> -->
+
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="modal" th:data-bs-target="'#editBuildingModal' + ${b.id}">
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        Edit
+                                    </button>
+
+                                    <!-- <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        th:data-bs-target="'#deleteBuildingModal' + ${b.id}">
+                                        <i class="bi bi-trash me-1"></i>
+                                        Delete
+                                    </button> -->
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr id="buildingNoResultRow" class="d-none">
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-search me-2"></i>
+                                No buildings match your search.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${buildings != null && !#lists.isEmpty(buildings)}"
+                class="card-footer bg-transparent building-pagination-footer">
+
+                <div class="text-muted small building-pagination-info" id="buildingPaginationInfo">
+                    Showing 0 to 0 of 0 buildings
+                </div>
+
+                <nav aria-label="Building pagination">
+                    <ul class="pagination building-pagination" id="buildingPagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Building Modal -->
+    <div class="modal fade" id="addBuildingModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <form th:action="@{/manager/buildings/create}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>
+                            Add Building
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <label class="form-label fw-semibold">Building Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="Building Name" required />
+
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-magic me-1"></i>
+                            Building code is generated automatically.
+                        </small>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Add
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Building Modals -->
+    <th:block th:each="b : ${buildings}">
+        <div class="modal fade" th:id="'editBuildingModal' + ${b.id}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <form th:action="@{/manager/buildings/__${b.id}__/update}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold">
+                                <i class="bi bi-pencil-square me-2 text-primary"></i>
+                                Edit Building
+                            </h5>
+
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <label class="form-label fw-semibold">Building Name</label>
+                            <input type="text" name="name" class="form-control" th:value="${b.name}" required />
+
+                            <small class="text-muted d-block mt-2">
+                                Code:
+                                <code th:text="${b.code}">CODE</code>
+                            </small>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Update
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- Delete Building Modals -->
+    <th:block th:each="b : ${buildings}">
+        <div class="modal fade" th:id="'deleteBuildingModal' + ${b.id}" tabindex="-1">
+            <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title text-danger">
+                            <i class="bi bi-trash me-1"></i>
+                            Delete Building
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="small">
+                            Type building name to confirm deletion:
+                        </p>
+
+                        <p class="fw-semibold text-center" th:text="${b.name}">
+                            Building Name
+                        </p>
+
+                        <form th:action="@{/manager/buildings/__${b.id}__/delete}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <input type="text" name="confirmName" class="form-control mb-3" placeholder="Building name"
+                                required />
+
+                            <button type="submit" class="btn btn-danger w-100">
+                                Delete Building
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = Array.from(document.querySelectorAll('.building-row'));
+            const searchInput = document.getElementById('buildingSearchInput');
+            const noResultRow = document.getElementById('buildingNoResultRow');
+            const pagination = document.getElementById('buildingPagination');
+            const paginationInfo = document.getElementById('buildingPaginationInfo');
+
+            const pageSize = 10;
+            let currentPage = 1;
+            let filteredRows = [];
+
+            function rowMatchesSearch(row) {
+                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                return !query || row.innerText.toLowerCase().includes(query);
+            }
+
+            function calculateFilteredRows() {
+                filteredRows = rows.filter(rowMatchesSearch);
+            }
+
+            function renderRows() {
+                rows.forEach(function (row) {
+                    row.style.display = 'none';
+                });
+
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, total);
+
+                filteredRows.slice(startIndex, endIndex).forEach(function (row, index) {
+                    row.style.display = '';
+
+                    const numberCell = row.querySelector('.building-row-number');
+
+                    if (numberCell) {
+                        numberCell.textContent = (startIndex + index + 1) + '.';
+                    }
+                });
+
+                if (noResultRow) {
+                    noResultRow.classList.toggle('d-none', total > 0);
+                }
+
+                if (paginationInfo) {
+                    paginationInfo.textContent = total === 0
+                        ? 'Showing 0 to 0 of 0 buildings'
+                        : 'Showing ' + (startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' buildings';
+                }
+
+                renderPagination(totalPages);
+            }
+
+            function createPageItem(label, disabled, active, clickHandler) {
+                const li = document.createElement('li');
+
+                li.className = 'page-item'
+                    + (disabled ? ' disabled' : '')
+                    + (active ? ' active' : '');
+
+                const btn = document.createElement('button');
+                btn.className = 'page-link';
+                btn.type = 'button';
+                btn.innerHTML = label;
+
+                if (!disabled && typeof clickHandler === 'function') {
+                    btn.addEventListener('click', clickHandler);
+                }
+
+                li.appendChild(btn);
+                return li;
+            }
+
+            function renderPagination(totalPages) {
+                if (!pagination) {
+                    return;
+                }
+
+                pagination.innerHTML = '';
+
+                if (filteredRows.length <= pageSize) {
+                    return;
+                }
+
+                pagination.appendChild(createPageItem(
+                    '<i class="bi bi-chevron-left"></i>',
+                    currentPage === 1,
+                    false,
+                    function () {
+                        currentPage--;
+                        renderRows();
+                    }
+                ));
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                        pagination.appendChild(createPageItem(
+                            String(i),
+                            false,
+                            i === currentPage,
+                            function () {
+                                currentPage = i;
+                                renderRows();
+                            }
+                        ));
+                    } else if (i === currentPage - 3 || i === currentPage + 3) {
+                        pagination.appendChild(createPageItem('...', true, false, null));
+                    }
+                }
+
+                pagination.appendChild(createPageItem(
+                    '<i class="bi bi-chevron-right"></i>',
+                    currentPage === totalPages,
+                    false,
+                    function () {
+                        currentPage++;
+                        renderRows();
+                    }
+                ));
+            }
+
+            function applySearch(resetPage) {
+                if (resetPage) {
+                    currentPage = 1;
+                }
+
+                calculateFilteredRows();
+                renderRows();
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    applySearch(true);
+                });
+            }
+
+            applySearch(true);
+        });
+    </script>
+
+</body>
+
+</html>

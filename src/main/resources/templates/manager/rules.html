@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Rules | SwineCore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
+
+    <style>
+        .manager-market-tabs {
+            border-radius: 18px;
+            background: #fff;
+            border: 1px solid #dce8df;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+            padding: .45rem;
+            display: inline-flex;
+            gap: .4rem;
+        }
+
+        .manager-market-tabs .tab-link {
+            min-width: 160px;
+            border-radius: 14px;
+            font-weight: 800;
+            padding: .75rem 1.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manager-market-tabs .tab-link.active {
+            background: #198754;
+            color: #fff;
+        }
+
+        .manager-market-tabs .tab-link.inactive {
+            background: transparent;
+            color: #198754;
+        }
+
+        .manager-market-tabs .tab-link.inactive:hover {
+            background: #e8f5ee;
+            color: #146c43;
+        }
+
+        .rule-header-tools {
+            min-width: 420px;
+            max-width: 620px;
+            width: 48%;
+        }
+
+        .rule-header-search {
+            height: 44px;
+            border-radius: 12px;
+        }
+
+        .rule-card {
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+            overflow: hidden;
+        }
+
+        .rule-table th,
+        .rule-table td {
+            vertical-align: middle;
+            white-space: nowrap;
+            padding: .85rem;
+        }
+
+        .rule-details-col {
+            min-width: 230px;
+            white-space: normal !important;
+        }
+
+        .rule-action-btn {
+            min-width: 86px;
+            height: 34px;
+            padding: 0 .7rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            border-radius: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .rule-pagination-footer {
+            padding: 1.25rem;
+        }
+
+        .rule-pagination-info {
+            text-align: center;
+            margin-bottom: .75rem;
+        }
+
+        .rule-pagination {
+            display: flex;
+            gap: .55rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 0;
+        }
+
+        .rule-pagination .page-link {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 14px;
+            border: 1px solid #d7e7dc;
+            background: #fff;
+            color: #198754;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .rule-pagination .page-item.active .page-link {
+            background: #198754;
+            border-color: #198754;
+            color: #fff;
+        }
+
+        .rule-pagination .page-item.disabled .page-link {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+            color: #9aa4ad;
+            pointer-events: none;
+        }
+
+        #ruleModal .modal-content {
+            max-height: calc(100vh - 2rem);
+        }
+
+        #ruleModal .modal-body {
+            overflow-y: auto;
+            max-height: calc(100vh - 180px);
+        }
+
+        @media (max-width: 992px) {
+
+            .rule-header-wrap,
+            .rule-card-header {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 1rem;
+            }
+
+            .rule-header-tools {
+                width: 100%;
+                max-width: none;
+                min-width: 0;
+            }
+
+            .manager-market-tabs {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .manager-market-tabs .tab-link {
+                min-width: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex">
+    <th:block th:replace="~{layout/base :: sidebar}"></th:block>
+
+    <div id="main-content" class="flex-grow-1 p-4 overflow-auto">
+        <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+        <div class="d-flex align-items-center justify-content-between mb-4 rule-header-wrap">
+            <div class="d-flex align-items-center">
+                <a th:href="@{/manager/dashboard}" class="btn btn-sm btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="bi bi-clipboard-check me-2 text-success"></i>
+                        Rules
+                    </h2>
+
+                    <div class="text-muted small" th:if="${farm != null}">
+                        Farm:
+                        <span class="fw-semibold" th:text="${farm.name}">Farm</span>
+                    </div>
+
+                    <div class="text-muted small" th:if="${farm == null}">
+                        No farm assigned.
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 justify-content-end rule-header-tools">
+                <input type="text" id="ruleSearchInput" class="form-control rule-header-search"
+                    placeholder="Search rules..." />
+
+                <button class="btn btn-success text-nowrap" data-bs-toggle="modal" data-bs-target="#ruleModal"
+                    onclick="openCreateModal()" th:disabled="${farm == null}">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    New Rule
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${farm == null}" class="alert alert-warning py-2 mb-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            No farm assigned. Contact admin.
+        </div>
+
+        <div class="d-flex justify-content-center mb-4">
+            <div class="manager-market-tabs">
+                <a th:href="@{/manager/rules}" class="tab-link active">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    Rules
+                </a>
+                <a th:href="@{/manager/rules/daily-tasks}" class="tab-link inactive">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Daily Tasks
+                </a>
+            </div>
+        </div>
+
+        <div class="card rule-card">
+            <div
+                class="card-header bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2 rule-card-header">
+                <div>
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-list-check me-2 text-success"></i>
+                        Rule List
+                    </h6>
+                    <small class="text-muted">
+                        Total:
+                        <span th:text="${rules != null ? #lists.size(rules) : 0}">0</span>
+                    </small>
+                </div>
+            </div>
+
+            <div th:if="${rules == null || #lists.isEmpty(rules)}" class="text-center text-muted py-5">
+                <i class="bi bi-clipboard fs-1 d-block mb-2 opacity-25"></i>
+                No rules yet. Click <strong>New Rule</strong> to create one.
+            </div>
+
+            <div th:if="${rules != null && !#lists.isEmpty(rules)}" class="table-responsive">
+                <table class="table table-hover align-middle mb-0 rule-table" id="ruleTable" data-no-live-search="true">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Trigger</th>
+                            <th class="rule-details-col">Details</th>
+                            <th>Applies To</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr th:each="r : ${rules}" class="rule-row">
+                            <td class="rule-row-number">1.</td>
+
+                            <td class="fw-semibold" th:text="${r.name}">Rule Name</td>
+
+                            <td>
+                                <span th:if="${r.ruleType != null && r.ruleType.name() == 'VACCINATION'}"
+                                    class="badge bg-info text-dark">
+                                    <i class="bi bi-shield-plus me-1"></i>VACCINATION
+                                </span>
+
+                                <span th:if="${r.ruleType != null && r.ruleType.name() == 'MEDICATION'}"
+                                    class="badge bg-warning text-dark">
+                                    <i class="bi bi-capsule me-1"></i>MEDICATION
+                                </span>
+
+                                <span th:if="${r.ruleType != null && r.ruleType.name() == 'FEEDING'}"
+                                    class="badge bg-success">
+                                    <i class="bi bi-basket me-1"></i>FEEDING
+                                </span>
+
+                                <span th:if="${r.ruleType == null}" class="badge bg-secondary">-</span>
+                            </td>
+
+                            <td>
+                                <span th:if="${r.dayFromBirth != null}" class="badge bg-light text-dark border">
+                                    Day <span th:text="${r.dayFromBirth}">0</span>
+                                </span>
+
+                                <span th:if="${r.dayRangeStart != null && r.dayRangeEnd != null}"
+                                    class="badge bg-light text-dark border">
+                                    Day
+                                    <span th:text="${r.dayRangeStart}">0</span>
+                                    -
+                                    <span th:text="${r.dayRangeEnd}">0</span>
+                                </span>
+
+                                <span
+                                    th:unless="${r.dayFromBirth != null || (r.dayRangeStart != null && r.dayRangeEnd != null)}"
+                                    class="text-muted">-</span>
+                            </td>
+
+                            <td class="rule-details-col">
+                                <span th:if="${r.medication != null && !r.medication.isBlank()}"
+                                    th:text="${r.medication}">Medication</span>
+
+                                <span th:if="${r.dosage != null && !r.dosage.isBlank()}">
+                                    | <span th:text="${r.dosage}">Dosage</span>
+                                </span>
+
+                                <span th:if="${r.feedType != null && !r.feedType.isBlank()}">
+                                    <span th:text="${r.feedType}">Feed</span>
+                                </span>
+
+                                <span th:if="${r.feedAmountKg != null}">
+                                    <span th:text="${r.feedAmountKg}">0</span> kg
+                                </span>
+
+                                <span
+                                    th:unless="${(r.medication != null && !r.medication.isBlank()) || (r.feedType != null && !r.feedType.isBlank()) || r.feedAmountKg != null}"
+                                    class="text-muted">-</span>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border" th:text="${r.appliesTo}">
+                                    ALL
+                                </span>
+                            </td>
+
+                            <td>
+                                <span th:if="${r.active}" class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+
+                                <span th:unless="${r.active}" class="badge bg-secondary">
+                                    <i class="bi bi-pause-circle me-1"></i>Inactive
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                    <button type="button" class="btn btn-outline-warning btn-sm rule-action-btn"
+                                        th:attr="data-rule-id=${r.id},
+                                             data-rule-name=${r.name},
+                                             data-rule-type=${r.ruleType},
+                                             data-day-from-birth=${r.dayFromBirth},
+                                             data-day-range-start=${r.dayRangeStart},
+                                             data-day-range-end=${r.dayRangeEnd},
+                                             data-medication=${r.medication},
+                                             data-dosage=${r.dosage},
+                                             data-feed-type=${r.feedType},
+                                             data-feed-amount-kg=${r.feedAmountKg},
+                                             data-administration-route=${r.administrationRoute},
+                                             data-applies-to=${r.appliesTo},
+                                             data-description=${r.description},
+                                             data-active=${r.active}" onclick="openEditModal(this)">
+                                        <i class="bi bi-pencil"></i>
+                                        <span>Edit</span>
+                                    </button>
+
+                                    <form th:action="@{/manager/rules/{id}/delete(id=${r.id})}" method="post"
+                                        class="d-inline">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                            th:value="${_csrf.token}" />
+
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rule-action-btn"
+                                            onclick="return confirm('Delete this rule?')">
+                                            <i class="bi bi-trash"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr id="ruleNoResultRow" class="d-none">
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="bi bi-search me-2"></i>
+                                No rules match your search.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${rules != null && !#lists.isEmpty(rules)}"
+                class="card-footer bg-transparent rule-pagination-footer">
+                <div class="text-muted small rule-pagination-info" id="rulePaginationInfo">
+                    Showing 0 to 0 of 0 rules
+                </div>
+
+                <nav>
+                    <ul class="pagination rule-pagination" id="rulePagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="ruleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-clipboard-check me-2 text-success"></i>
+                        <span id="modalTitleText">New Rule Schedule</span>
+                    </h5>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form id="ruleForm" th:action="@{/manager/rules/create}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" id="ruleIdField" name="id" />
+
+                    <div class="modal-body">
+                        <div class="mb-3 p-3 rounded border bg-light">
+                            <label class="form-label fw-bold">
+                                Rule Type <span class="text-danger">*</span>
+                            </label>
+
+                            <select id="formRuleType" name="ruleType" class="form-select form-select-lg" required
+                                onchange="updateFields()">
+                                <option value="" selected disabled>Choose Vaccine, Medicine or Feed...</option>
+                                <option value="VACCINATION">Vaccine</option>
+                                <option value="MEDICATION">Medicine</option>
+                                <option value="FEEDING">Feed</option>
+                            </select>
+                        </div>
+
+                        <div id="ruleDetails" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    Rule Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" id="formName" name="name" class="form-control" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Applies To</label>
+                                <select id="formAppliesTo" name="appliesTo" class="form-select">
+                                    <option value="ALL">ALL</option>
+                                    <option value="PIGLET">PIGLET</option>
+                                    <option value="GROWER">GROWER</option>
+                                    <option value="FINISHER">FINISHER</option>
+                                    <option value="BREEDING_SOW">BREEDING SOW</option>
+                                    <option value="BREEDING_BOAR">BREEDING BOAR</option>
+                                </select>
+                            </div>
+
+                            <hr />
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold" id="label-dayFromBirth">
+                                        Day After Birth
+                                    </label>
+                                    <input type="number" id="formDayFromBirth" name="dayFromBirth" class="form-control"
+                                        min="1" />
+                                </div>
+
+                                <div class="col-md-4 feeding-range">
+                                    <label class="form-label fw-semibold">Day Range Start</label>
+                                    <input type="number" id="formDayRangeStart" name="dayRangeStart"
+                                        class="form-control" min="1" />
+                                </div>
+
+                                <div class="col-md-4 feeding-range">
+                                    <label class="form-label fw-semibold">Day Range End</label>
+                                    <input type="number" id="formDayRangeEnd" name="dayRangeEnd" class="form-control"
+                                        min="1" />
+                                </div>
+                            </div>
+
+                            <div id="fields-vaccination" class="type-fields">
+                                <h6 class="fw-bold text-muted small text-uppercase">Vaccination Details</h6>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Vaccine Name</label>
+                                        <input type="text" id="formVaccMedication" name="medication"
+                                            class="form-control" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Dosage</label>
+                                        <input type="text" id="formVaccDosage" name="dosage" class="form-control" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Administration Route</label>
+                                        <select id="formVaccRoute" name="administrationRoute" class="form-select">
+                                            <option value="">-- Select --</option>
+                                            <option value="INTRAMUSCULAR">INTRAMUSCULAR</option>
+                                            <option value="SUBCUTANEOUS">SUBCUTANEOUS</option>
+                                            <option value="ORAL">ORAL</option>
+                                            <option value="NASAL">NASAL</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="fields-medication" class="type-fields">
+                                <h6 class="fw-bold text-muted small text-uppercase">Medication Details</h6>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Medication Name</label>
+                                        <input type="text" id="formMedMedication" name="medication"
+                                            class="form-control" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Dosage</label>
+                                        <input type="text" id="formMedDosage" name="dosage" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="fields-feeding" class="type-fields">
+                                <h6 class="fw-bold text-muted small text-uppercase">Feeding Details</h6>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Feed Type</label>
+                                        <input type="text" id="formFeedType" name="feedType" class="form-control" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Feed Amount (kg)</label>
+                                        <input type="number" id="formFeedAmountKg" name="feedAmountKg"
+                                            class="form-control" step="0.01" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label fw-semibold">Description / Notes</label>
+                                <textarea id="formDescription" name="description" class="form-control"
+                                    rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-success px-4" id="saveRuleButton">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span id="submitBtnText">Save Rule</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+
+    <script th:inline="javascript">
+        function openCreateModal() {
+            document.getElementById('modalTitleText').textContent = 'New Rule Schedule';
+            document.getElementById('submitBtnText').textContent = 'Save Rule';
+            document.getElementById('ruleForm').action = /*[[@{/manager/rules/create}]]*/ '/manager/rules/create';
+            document.getElementById('ruleIdField').value = '';
+            document.getElementById('ruleForm').reset();
+            updateFields();
+        }
+
+        function openEditModal(btn) {
+            document.getElementById('modalTitleText').textContent = 'Edit Rule Schedule';
+            document.getElementById('submitBtnText').textContent = 'Update Rule';
+            document.getElementById('ruleForm').action = /*[[@{/manager/rules/update}]]*/ '/manager/rules/update';
+            document.getElementById('ruleIdField').value = btn.dataset.ruleId || '';
+
+            document.getElementById('formName').value = btn.dataset.ruleName || '';
+            document.getElementById('formRuleType').value = btn.dataset.ruleType || '';
+            document.getElementById('formAppliesTo').value = btn.dataset.appliesTo || 'ALL';
+            document.getElementById('formDayFromBirth').value = btn.dataset.dayFromBirth || '';
+            document.getElementById('formDayRangeStart').value = btn.dataset.dayRangeStart || '';
+            document.getElementById('formDayRangeEnd').value = btn.dataset.dayRangeEnd || '';
+            document.getElementById('formDescription').value = btn.dataset.description || '';
+
+            document.getElementById('formVaccMedication').value =
+                btn.dataset.ruleType === 'VACCINATION' ? (btn.dataset.medication || '') : '';
+            document.getElementById('formVaccDosage').value =
+                btn.dataset.ruleType === 'VACCINATION' ? (btn.dataset.dosage || '') : '';
+            document.getElementById('formVaccRoute').value = btn.dataset.administrationRoute || '';
+
+            document.getElementById('formMedMedication').value =
+                btn.dataset.ruleType === 'MEDICATION' ? (btn.dataset.medication || '') : '';
+            document.getElementById('formMedDosage').value =
+                btn.dataset.ruleType === 'MEDICATION' ? (btn.dataset.dosage || '') : '';
+
+            document.getElementById('formFeedType').value =
+                btn.dataset.ruleType === 'FEEDING' ? (btn.dataset.feedType || '') : '';
+            document.getElementById('formFeedAmountKg').value =
+                btn.dataset.ruleType === 'FEEDING' ? (btn.dataset.feedAmountKg || '') : '';
+
+            updateFields();
+            new bootstrap.Modal(document.getElementById('ruleModal')).show();
+        }
+
+        function updateFields() {
+            const type = document.getElementById('formRuleType').value;
+            const supported = ['VACCINATION', 'MEDICATION', 'FEEDING'].includes(type);
+
+            document.getElementById('ruleDetails').style.display = supported ? 'block' : 'none';
+            document.getElementById('saveRuleButton').disabled = !supported;
+
+            document.querySelectorAll('.type-fields').forEach(function (el) {
+                el.style.display = 'none';
+                el.querySelectorAll('input, select, textarea').forEach(function (field) {
+                    field.disabled = true;
+                    field.required = false;
+                });
+            });
+
+            document.querySelectorAll('.feeding-range').forEach(function (el) {
+                el.style.display = type === 'FEEDING' ? '' : 'none';
+            });
+
+            const dayInput = document.getElementById('formDayFromBirth');
+            dayInput.required = type === 'VACCINATION' || type === 'MEDICATION';
+
+            const target = document.getElementById('fields-' + type.toLowerCase());
+            if (target) {
+                target.style.display = 'block';
+                target.querySelectorAll('input, select, textarea').forEach(function (field) {
+                    field.disabled = false;
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateFields();
+
+            const rows = Array.from(document.querySelectorAll('.rule-row'));
+            const searchInput = document.getElementById('ruleSearchInput');
+            const noResultRow = document.getElementById('ruleNoResultRow');
+            const pagination = document.getElementById('rulePagination');
+            const paginationInfo = document.getElementById('rulePaginationInfo');
+            
+            const pageSize = 7;
+            let currentPage = 1;
+            let filteredRows = [];
+
+            function rowMatchesSearch(row) {
+                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                return !query || row.innerText.toLowerCase().includes(query);
+            }
+
+            function calculateFilteredRows() {
+                filteredRows = rows.filter(rowMatchesSearch);
+            }
+
+            function renderRows() {
+                rows.forEach(row => row.style.display = 'none');
+
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, total);
+
+                filteredRows.slice(startIndex, endIndex).forEach(function (row, index) {
+                    row.style.display = '';
+
+                    const numberCell = row.querySelector('.rule-row-number');
+                    if (numberCell) {
+                        numberCell.textContent = (startIndex + index + 1) + '.';
+                    }
+                });
+
+                if (noResultRow) {
+                    noResultRow.classList.toggle('d-none', total > 0);
+                }
+
+                if (paginationInfo) {
+                    paginationInfo.textContent = total === 0
+                        ? 'Showing 0 to 0 of 0 rules'
+                        : 'Showing ' + (startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' rules';
+                }
+
+                renderPagination(totalPages);
+            }
+
+            function createPageItem(label, disabled, active, clickHandler) {
+                const li = document.createElement('li');
+                li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+
+                const btn = document.createElement('button');
+                btn.className = 'page-link';
+                btn.type = 'button';
+                btn.innerHTML = label;
+
+                if (!disabled && clickHandler) {
+                    btn.addEventListener('click', clickHandler);
+                }
+
+                li.appendChild(btn);
+                return li;
+            }
+
+            function renderPagination(totalPages) {
+                if (!pagination) return;
+
+                pagination.innerHTML = '';
+
+                if (filteredRows.length <= pageSize) return;
+
+                pagination.appendChild(createPageItem('<i class="bi bi-chevron-left"></i>', currentPage === 1, false, function () {
+                    currentPage--;
+                    renderRows();
+                }));
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                        pagination.appendChild(createPageItem(String(i), false, i === currentPage, function () {
+                            currentPage = i;
+                            renderRows();
+                        }));
+                    } else if (i === currentPage - 3 || i === currentPage + 3) {
+                        pagination.appendChild(createPageItem('...', true, false, null));
+                    }
+                }
+
+                pagination.appendChild(createPageItem('<i class="bi bi-chevron-right"></i>', currentPage === totalPages, false, function () {
+                    currentPage++;
+                    renderRows();
+                }));
+            }
+
+            function applySearch(resetPage) {
+                if (resetPage) currentPage = 1;
+                calculateFilteredRows();
+                renderRows();
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => applySearch(true));
+            }
+
+            applySearch(true);
+        });
+    </script>
+</body>
+
+</html>

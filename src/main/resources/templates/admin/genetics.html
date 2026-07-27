@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Genetics | SwineCore</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
+
+    <style>
+        .genetics-card {
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+            overflow: hidden;
+        }
+
+        .genetics-search {
+            height: 42px;
+            border-radius: 12px;
+            max-width: 280px;
+        }
+
+        .genetics-header-search {
+            width: 280px;
+        }
+
+        .genetics-header-actions {
+            margin-left: auto;
+        }
+
+        .genetics-table th,
+        .genetics-table td {
+            vertical-align: middle;
+            white-space: nowrap;
+            padding: .85rem;
+        }
+
+        .genetics-description {
+            max-width: 420px;
+            white-space: normal !important;
+        }
+
+        .genetics-pagination-footer {
+            padding: 1rem;
+        }
+
+        .genetics-pagination-info {
+            text-align: center;
+            margin-bottom: .75rem;
+        }
+
+        .genetics-pagination {
+            display: flex;
+            gap: .45rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 0;
+        }
+
+        .genetics-pagination .page-item .page-link {
+            min-width: 40px;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid #d7e7dc;
+            background: #ffffff;
+            color: #198754;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .genetics-pagination .page-item.active .page-link {
+            background: #198754;
+            border-color: #198754;
+            color: #ffffff;
+        }
+
+        .genetics-pagination .page-item.disabled .page-link {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+            color: #9aa4ad;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .genetics-search,
+            .genetics-header-search {
+                max-width: none;
+                width: 100%;
+            }
+
+            .genetics-header-actions {
+                width: 100%;
+            }
+
+            .genetics-header-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex">
+
+    <th:block th:replace="~{layout/base :: sidebar}"></th:block>
+
+    <main id="main-content" class="flex-grow-1 p-4 overflow-auto">
+
+        <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-4 flex-wrap">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-diagram-3 me-2 text-success"></i>
+                    Pig Genetics &amp; Categories
+                </h2>
+
+                <div class="text-muted small">
+                    View, search, create and delete genetic categories.
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3 flex-wrap genetics-header-actions">
+                <input type="text" id="geneticsSearchInput" class="form-control genetics-search genetics-header-search"
+                    placeholder="Search genetics..." />
+
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addGeneticsModal">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Add Genetic Category
+                </button>
+            </div>
+        </div>
+
+        <div class="card genetics-card">
+            <div class="card-header bg-transparent">
+                <div>
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-diagram-3 me-2 text-success"></i>
+                        Genetic Categories
+                    </h6>
+
+                    <small class="text-muted">
+                        Total:
+                        <span th:text="${geneticsList != null ? #lists.size(geneticsList) : 0}">0</span>
+                    </small>
+                </div>
+            </div>
+
+            <div th:if="${geneticsList == null || #lists.isEmpty(geneticsList)}" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                No genetic categories found.
+            </div>
+
+            <div th:if="${geneticsList != null && !#lists.isEmpty(geneticsList)}" class="table-responsive">
+                <table class="table table-hover align-middle mb-0 genetics-table" id="geneticsTable"
+                    data-no-live-search="true">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>No.</th>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr class="genetics-row" th:each="g : ${geneticsList}">
+                            <td class="genetics-row-number">1.</td>
+
+                            <td class="fw-semibold" th:text="${g.name}">
+                                Yorkshire
+                            </td>
+
+                            <td>
+                                <code class="badge text-bg-secondary" th:text="${g.code}">
+                            Y
+                        </code>
+                            </td>
+
+                            <td class="text-muted small genetics-description" th:text="${g.description}">
+                                Description
+                            </td>
+
+                            <td>
+                                <span class="badge" th:classappend="${g.active} ? 'bg-success' : 'bg-secondary'"
+                                    th:text="${g.active} ? 'Active' : 'Inactive'">
+                                    Active
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="modal"
+                                    th:data-bs-target="'#delGen' + ${g.id}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr id="geneticsNoResultRow" class="d-none">
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-search me-2"></i>
+                                No genetic categories match your search.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${geneticsList != null && !#lists.isEmpty(geneticsList)}"
+                class="card-footer bg-transparent genetics-pagination-footer">
+                <div class="text-muted small genetics-pagination-info" id="geneticsPaginationInfo">
+                    Showing 0 to 0 of 0 genetics
+                </div>
+
+                <nav aria-label="Genetics pagination">
+                    <ul class="pagination genetics-pagination" id="geneticsPagination"></ul>
+                </nav>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Add Genetics Modal -->
+    <div class="modal fade" id="addGeneticsModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <form th:action="@{/admin/genetics/create}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-diagram-3 me-2 text-success"></i>
+                            Add Genetic Category
+                        </h5>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g., Yorkshire"
+                                required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Code</label>
+                            <input type="text" name="code" class="form-control text-uppercase" placeholder="e.g., Y"
+                                maxlength="6" required />
+                        </div>
+
+                        <div>
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                placeholder="Describe this genetic category"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Add
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modals -->
+    <th:block th:each="g : ${geneticsList}">
+        <div class="modal fade" th:id="'delGen' + ${g.id}" tabindex="-1">
+            <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">
+                            <i class="bi bi-trash me-1"></i>
+                            Delete Genetics
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        Delete
+                        <strong th:text="${g.name}">Genetics</strong>?
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <form th:action="@{/admin/genetics/__${g.id}__/delete}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <input type="hidden" name="confirmName" th:value="${g.name}" />
+
+                            <button class="btn btn-danger" type="submit">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setupGeneticsTable({
+                rowSelector: '.genetics-row',
+                searchInputId: 'geneticsSearchInput',
+                noResultRowId: 'geneticsNoResultRow',
+                paginationId: 'geneticsPagination',
+                paginationInfoId: 'geneticsPaginationInfo',
+                numberCellSelector: '.genetics-row-number',
+                itemName: 'genetics'
+            });
+
+            function setupGeneticsTable(config) {
+                const rows = Array.from(document.querySelectorAll(config.rowSelector));
+                const searchInput = document.getElementById(config.searchInputId);
+                const noResultRow = document.getElementById(config.noResultRowId);
+                const pagination = document.getElementById(config.paginationId);
+                const paginationInfo = document.getElementById(config.paginationInfoId);
+
+                const pageSize = 7;
+                let currentPage = 1;
+                let filteredRows = [];
+
+                function rowMatchesSearch(row) {
+                    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                    return !query || row.innerText.toLowerCase().includes(query);
+                }
+
+                function calculateFilteredRows() {
+                    filteredRows = rows.filter(rowMatchesSearch);
+                }
+
+                function renderRows() {
+                    rows.forEach(function (row) {
+                        row.style.display = 'none';
+                    });
+
+                    const total = filteredRows.length;
+                    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                    if (currentPage > totalPages) {
+                        currentPage = totalPages;
+                    }
+
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const endIndex = Math.min(startIndex + pageSize, total);
+
+                    filteredRows.slice(startIndex, endIndex).forEach(function (row, index) {
+                        row.style.display = '';
+
+                        const numberCell = row.querySelector(config.numberCellSelector);
+                        if (numberCell) {
+                            numberCell.textContent = (startIndex + index + 1) + '.';
+                        }
+                    });
+
+                    if (noResultRow) {
+                        noResultRow.classList.toggle('d-none', total > 0);
+                    }
+
+                    if (paginationInfo) {
+                        paginationInfo.textContent = total === 0
+                            ? 'Showing 0 to 0 of 0 ' + config.itemName
+                            : 'Showing ' + (startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' ' + config.itemName;
+                    }
+
+                    renderPagination(totalPages);
+                }
+
+                function createPageItem(label, disabled, active, clickHandler) {
+                    const li = document.createElement('li');
+
+                    li.className = 'page-item'
+                        + (disabled ? ' disabled' : '')
+                        + (active ? ' active' : '');
+
+                    const btn = document.createElement('button');
+                    btn.className = 'page-link';
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+
+                    if (!disabled && typeof clickHandler === 'function') {
+                        btn.addEventListener('click', clickHandler);
+                    }
+
+                    li.appendChild(btn);
+                    return li;
+                }
+
+                function renderPagination(totalPages) {
+                    if (!pagination) {
+                        return;
+                    }
+
+                    pagination.innerHTML = '';
+
+                    if (filteredRows.length <= pageSize) {
+                        return;
+                    }
+
+                    pagination.appendChild(createPageItem(
+                        '<i class="bi bi-chevron-left"></i>',
+                        currentPage === 1,
+                        false,
+                        function () {
+                            currentPage--;
+                            renderRows();
+                        }
+                    ));
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                            pagination.appendChild(createPageItem(
+                                String(i),
+                                false,
+                                i === currentPage,
+                                function () {
+                                    currentPage = i;
+                                    renderRows();
+                                }
+                            ));
+                        } else if (i === currentPage - 3 || i === currentPage + 3) {
+                            pagination.appendChild(createPageItem('...', true, false, null));
+                        }
+                    }
+
+                    pagination.appendChild(createPageItem(
+                        '<i class="bi bi-chevron-right"></i>',
+                        currentPage === totalPages,
+                        false,
+                        function () {
+                            currentPage++;
+                            renderRows();
+                        }
+                    ));
+                }
+
+                function applySearch(resetPage) {
+                    if (resetPage) {
+                        currentPage = 1;
+                    }
+
+                    calculateFilteredRows();
+                    renderRows();
+                }
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', function () {
+                        applySearch(true);
+                    });
+                }
+
+                applySearch(true);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Building Pigs | SwineCore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+
+    <style>
+        .pig-header-tools { min-width: 360px; max-width: 520px; width: 42%; }
+        .pig-header-search { height: 44px; border-radius: 12px; }
+        .pig-stat-card { border: 0; border-radius: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, .08); }
+        .pig-stat-icon { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: #e8f5ee; color: #198754; font-size: 1.25rem; }
+        .pig-table-card { overflow: hidden; }
+        .pig-table-card .table { margin-bottom: 0; }
+        .dropdown-menu.pig-filter-menu { min-width: 270px; max-height: 430px; overflow-y: auto; border-radius: 14px; border: 1px solid #dce8df; box-shadow: 0 16px 32px rgba(15, 23, 42, .12); }
+        .pig-filter-menu .dropdown-item { font-weight: 600; padding: .55rem 1rem; }
+        .pig-filter-menu .dropdown-header { font-weight: 800; color: #198754; }
+        .pig-pagination-footer { padding: 1.25rem; }
+        .pig-pagination-info { text-align: center; margin-bottom: .75rem; }
+        .pig-pagination-wrap { display: flex; justify-content: center; align-items: center; }
+        .pig-pagination { display: flex; gap: .55rem; flex-wrap: wrap; justify-content: center; margin-bottom: 0; }
+        .pig-pagination .page-item .page-link { min-width: 44px; height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid #d7e7dc; background: #ffffff; color: #1f7a4d; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: none; transition: all .2s ease; cursor: pointer; }
+        .pig-pagination .page-item .page-link:hover { background: #f3faf6; border-color: #8fc7a7; color: #146c43; }
+        .pig-pagination .page-item.active .page-link { background: #198754; border-color: #198754; color: #ffffff; }
+        .pig-pagination .page-item.disabled .page-link { background: #f8f9fa; border-color: #e9ecef; color: #9aa4ad; opacity: 1; pointer-events: none; }
+        .pig-pagination .page-item.arrow .page-link { font-size: 1.05rem; font-weight: 700; }
+
+        @media (max-width: 992px) {
+            .pig-header-wrap { flex-direction: column; align-items: stretch !important; gap: 1rem; }
+            .pig-header-tools { width: 100%; max-width: none; min-width: 0; }
+        }
+    </style>
+</head>
+
+<body class="d-flex">
+<th:block th:replace="~{layout/base :: sidebar}"></th:block>
+
+<div id="main-content" class="flex-grow-1 p-4 overflow-auto">
+    <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+    <div class="d-flex align-items-center justify-content-between mb-4 pig-header-wrap">
+        <div class="d-flex align-items-center">
+            <a th:href="@{/staff/dashboard}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-piggy-bank me-2 text-success"></i>
+                    Building Pigs
+                </h2>
+
+                <div class="text-muted small" th:if="${building != null}">
+                    Assigned Building:
+                    <span class="fw-semibold" th:text="${building.name}">Building</span>
+                </div>
+
+                <div class="text-muted small" th:if="${building == null}">
+                    No building assigned.
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end pig-header-tools">
+            <input type="text"
+                   id="pigSearchInput"
+                   class="form-control pig-header-search"
+                   placeholder="Search this list..."/>
+        </div>
+    </div>
+
+    <div th:if="${building == null}" class="alert alert-warning glass-card py-2 mb-4">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        No building assigned. Contact your supervisor.
+    </div>
+
+    <div th:if="${building != null}">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card pig-stat-card h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">Total Pigs</div>
+                            <h3 class="fw-bold mb-0" th:text="${pigs != null ? #lists.size(pigs) : 0}">0</h3>
+                        </div>
+                        <div class="pig-stat-icon">
+                            <i class="bi bi-piggy-bank"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card pig-stat-card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Breeding Stock</div>
+                        <h3 class="fw-bold mb-0" th:text="${breedingStock != null ? #lists.size(breedingStock) : 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card pig-stat-card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Mated Sows</div>
+                        <h3 class="fw-bold mb-0" th:text="${matedSows != null ? #lists.size(matedSows) : 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card pig-stat-card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Unmated Sows</div>
+                        <h3 class="fw-bold mb-0" th:text="${unmatedSows != null ? #lists.size(unmatedSows) : 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass-card border-0 shadow-sm pig-table-card">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-funnel me-2 text-success"></i>
+                        Pig List
+                    </h6>
+                    <small class="text-muted">Choose a category from dropdown</small>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-success dropdown-toggle"
+                            type="button"
+                            id="pigFilterDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        All Pigs
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end pig-filter-menu"
+                        aria-labelledby="pigFilterDropdown">
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="all">
+                                All
+                                <span class="badge bg-secondary ms-1" th:text="${pigs != null ? #lists.size(pigs) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Age Groups</h6></li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="small">
+                                Small / Piglets
+                                <span class="badge bg-info text-dark ms-1" th:text="${smallPigs != null ? #lists.size(smallPigs) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="medium">
+                                Medium / Growers
+                                <span class="badge bg-secondary ms-1" th:text="${mediumPigs != null ? #lists.size(mediumPigs) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="large">
+                                Large / Finishers
+                                <span class="badge bg-secondary ms-1" th:text="${largePigs != null ? #lists.size(largePigs) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Breeding Groups</h6></li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="breeding-stock">
+                                Breeding Stock
+                                <span class="badge bg-success ms-1" th:text="${breedingStock != null ? #lists.size(breedingStock) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="boar">
+                                Breeding Boars
+                                <span class="badge bg-primary ms-1" th:text="${breedingBoars != null ? #lists.size(breedingBoars) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="sow">
+                                Breeding Sows
+                                <span class="badge bg-success ms-1" th:text="${breedingSows != null ? #lists.size(breedingSows) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="mated-sow">
+                                Mated Sows
+                                <span class="badge bg-success ms-1" th:text="${matedSows != null ? #lists.size(matedSows) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="unmated-sow">
+                                Unmated Sows
+                                <span class="badge bg-warning text-dark ms-1" th:text="${unmatedSows != null ? #lists.size(unmatedSows) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Sale Status</h6></li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="for-sale">
+                                For Sale
+                                <span class="badge bg-success ms-1" th:text="${forSalePigs != null ? #lists.size(forSalePigs) : 0}">0</span>
+                            </button>
+                        </li>
+
+                        <li>
+                            <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="sold">
+                                Sold
+                                <span class="badge bg-danger ms-1" th:text="${soldPigs != null ? #lists.size(soldPigs) : 0}">0</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div th:if="${pigs == null || #lists.isEmpty(pigs)}" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                No pigs found in this building.
+            </div>
+
+            <div th:if="${pigs != null && !#lists.isEmpty(pigs)}" class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="pigTable">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Pig Code</th>
+                        <th>Category</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Status</th>
+                        <th>Genetics</th>
+                        <th>Mother</th>
+                        <th>Birth Date</th>
+                        <th>Weight</th>
+                        <th>Notes</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="pig : ${pigs}"
+                        class="pig-row"
+                        th:attr="data-groups=${
+                            pig.status != null && pig.status.name() == 'BREEDING_BOAR' ? 'all breeding-stock boar' :
+                            pig.status != null && pig.status.name() == 'BREEDING_SOW' && pig.notes != null && pig.notes.contains('Breeding Record:') ? 'all breeding-stock sow mated-sow' :
+                            pig.status != null && pig.status.name() == 'BREEDING_SOW' ? 'all breeding-stock sow unmated-sow' :
+                            pig.status != null && pig.status.name() == 'PIGLET' ? 'all small' :
+                            pig.status != null && pig.status.name() == 'GROWER' ? 'all medium' :
+                            pig.status != null && pig.status.name() == 'FINISHER' ? 'all large' :
+                            pig.status != null && pig.status.name() == 'FOR_SALE' ? 'all for-sale' :
+                            pig.status != null && pig.status.name() == 'SOLD' ? 'all sold' :
+                            'all'
+                        }">
+
+                        <td class="pig-row-number">1.</td>
+
+                        <td><code th:text="${pig.code}">PIG001</code></td>
+
+                        <td>
+                            <span th:if="${pig.status != null && pig.status.name() == 'BREEDING_BOAR'}" class="badge bg-primary">Breeding Boar</span>
+                            <span th:if="${pig.status != null && pig.status.name() == 'BREEDING_SOW' && pig.notes != null && pig.notes.contains('Breeding Record:')}" class="badge bg-success">Mated Sow</span>
+                            <span th:if="${pig.status != null && pig.status.name() == 'BREEDING_SOW' && (pig.notes == null || !pig.notes.contains('Breeding Record:'))}" class="badge bg-warning text-dark">Unmated Sow</span>
+                            <span th:if="${pig.status != null && pig.status.name() == 'PIGLET'}" class="badge bg-info text-dark">Small / Piglet</span>
+                            <span th:if="${pig.status != null && pig.status.name() == 'GROWER'}" class="badge bg-secondary">Medium / Grower</span>
+                            <span th:if="${pig.status != null && pig.status.name() == 'FINISHER'}" class="badge bg-secondary">Large / Finisher</span>
+                            <span th:if="${pig.status != null && pig.status.name() == 'FOR_SALE'}" class="badge bg-success">For Sale</span>
+                            <span th:if="${pig.status != null && pig.status.name() == 'SOLD'}" class="badge bg-danger">Sold</span>
+                            <span th:if="${pig.status == null}" class="badge bg-light text-dark">Unknown</span>
+                        </td>
+
+                        <td>
+                            <span th:if="${pig.birthDate != null}" th:text="${pig.ageInDays + ' days'}">0 days</span>
+                            <span th:if="${pig.birthDate == null}" class="text-muted">-</span>
+                        </td>
+
+                        <td th:text="${pig.gender != null ? pig.gender : '-'}">-</td>
+
+                        <td><span class="badge bg-secondary" th:text="${pig.status != null ? pig.status : '-'}">-</span></td>
+
+                        <td th:text="${pig.genetics != null ? pig.genetics.name : '-'}">-</td>
+
+                        <td>
+                            <code th:if="${pig.mother != null}" th:text="${pig.mother.code}">M001</code>
+                            <span th:if="${pig.mother == null}" class="text-muted">-</span>
+                        </td>
+
+                        <td th:text="${pig.birthDate != null ? #temporals.format(pig.birthDate, 'dd MMM yyyy') : '-'}">-</td>
+
+                        <td>
+                            <span th:if="${pig.currentWeight != null}" th:text="${pig.currentWeight + ' kg'}">0 kg</span>
+                            <span th:if="${pig.currentWeight == null}" class="text-muted">-</span>
+                        </td>
+
+                        <td>
+                            <span th:if="${pig.notes != null && pig.notes.length() > 45}" th:text="${#strings.substring(pig.notes, 0, 45) + '...'}"></span>
+                            <span th:if="${pig.notes != null && pig.notes.length() <= 45}" th:text="${pig.notes}"></span>
+                            <span th:if="${pig.notes == null}" class="text-muted">-</span>
+                        </td>
+                    </tr>
+
+                    <tr id="pigNoResultRow" class="d-none">
+                        <td colspan="11" class="text-center text-muted py-4">
+                            <i class="bi bi-search me-2"></i>
+                            No pigs match your search.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${pigs != null && !#lists.isEmpty(pigs)}"
+                 class="card-footer bg-transparent pig-pagination-footer">
+                <div class="text-muted small pig-pagination-info" id="pigPaginationInfo">
+                    Showing 0 to 0 of 0 pigs
+                </div>
+
+                <div class="pig-pagination-wrap">
+                    <nav aria-label="Pig pagination">
+                        <ul class="pagination pig-pagination" id="pigPagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rows = Array.from(document.querySelectorAll('.pig-row'));
+    const searchInput = document.getElementById('pigSearchInput');
+    const dropdownFilterButtons = document.querySelectorAll('.pig-dropdown-filter');
+    const pigFilterDropdown = document.getElementById('pigFilterDropdown');
+    const noResultRow = document.getElementById('pigNoResultRow');
+    const pagination = document.getElementById('pigPagination');
+    const paginationInfo = document.getElementById('pigPaginationInfo');
+
+    const pageSize = 8;
+    let activeFilter = 'all';
+    let currentPage = 1;
+    let filteredRows = [];
+
+    function rowMatchesFilter(row) {
+        const groups = (row.getAttribute('data-groups') || 'all').split(/\s+/);
+        return activeFilter === 'all' || groups.includes(activeFilter);
+    }
+
+    function rowMatchesSearch(row) {
+        const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        if (!query) return true;
+        return row.innerText.toLowerCase().includes(query);
+    }
+
+    function calculateFilteredRows() {
+        filteredRows = rows.filter(function (row) {
+            return rowMatchesFilter(row) && rowMatchesSearch(row);
+        });
+    }
+
+    function renderRows() {
+        rows.forEach(function (row) {
+            row.style.display = 'none';
+        });
+
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, total);
+
+        filteredRows.slice(startIndex, endIndex).forEach(function (row, index) {
+            row.style.display = '';
+
+            const numberCell = row.querySelector('.pig-row-number');
+            if (numberCell) {
+                numberCell.textContent = (index + 1) + '.';
+            }
+        });
+
+        if (noResultRow) {
+            noResultRow.classList.toggle('d-none', total > 0);
+        }
+
+        if (paginationInfo) {
+            paginationInfo.textContent = total === 0
+                ? 'Showing 0 to 0 of 0 pigs'
+                : 'Showing ' + (startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' pigs';
+        }
+
+        renderPagination(totalPages);
+    }
+
+    function createPageItem(label, disabled, active, clickHandler, arrow) {
+        const li = document.createElement('li');
+        li.className = 'page-item'
+            + (disabled ? ' disabled' : '')
+            + (active ? ' active' : '')
+            + (arrow ? ' arrow' : '');
+
+        const btn = document.createElement('button');
+        btn.className = 'page-link';
+        btn.type = 'button';
+        btn.innerHTML = label;
+
+        if (!disabled && typeof clickHandler === 'function') {
+            btn.addEventListener('click', clickHandler);
+        }
+
+        li.appendChild(btn);
+        return li;
+    }
+
+    function renderPagination(totalPages) {
+        if (!pagination) return;
+
+        pagination.innerHTML = '';
+
+        if (filteredRows.length <= pageSize) {
+            return;
+        }
+
+        pagination.appendChild(createPageItem('<i class="bi bi-chevron-left"></i>', currentPage === 1, false, function () {
+            currentPage--;
+            renderRows();
+        }, true));
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                pagination.appendChild(createPageItem(String(i), false, i === currentPage, function () {
+                    currentPage = i;
+                    renderRows();
+                }, false));
+            } else if (i === currentPage - 3 || i === currentPage + 3) {
+                pagination.appendChild(createPageItem('...', true, false, null, false));
+            }
+        }
+
+        pagination.appendChild(createPageItem('<i class="bi bi-chevron-right"></i>', currentPage === totalPages, false, function () {
+            currentPage++;
+            renderRows();
+        }, true));
+    }
+
+    function applyPigFilters(resetPage) {
+        if (resetPage) {
+            currentPage = 1;
+        }
+
+        calculateFilteredRows();
+        renderRows();
+    }
+
+    dropdownFilterButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            activeFilter = button.getAttribute('data-filter') || 'all';
+
+            if (pigFilterDropdown) {
+                pigFilterDropdown.textContent = button.childNodes[0].textContent.trim();
+            }
+
+            applyPigFilters(true);
+        });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            applyPigFilters(true);
+        });
+    }
+
+    applyPigFilters(true);
+});
+</script>
+</body>
+</html>

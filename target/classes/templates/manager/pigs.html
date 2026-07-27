@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Manager Pigs | SwineCore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
+
+    <style>
+        .pig-header-tools {
+            min-width: 420px;
+            max-width: 620px;
+            width: 48%;
+        }
+
+        .pig-header-search {
+            height: 44px;
+            border-radius: 12px;
+        }
+
+        .manager-market-tabs {
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid #dce8df;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+            padding: .45rem;
+            display: inline-flex;
+            gap: .4rem;
+        }
+
+        .manager-market-tabs .tab-link {
+            min-width: 160px;
+            border-radius: 14px;
+            font-weight: 800;
+            padding: .75rem 1.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manager-market-tabs .tab-link.active {
+            background: #198754;
+            color: #ffffff;
+        }
+
+        .manager-market-tabs .tab-link.inactive {
+            background: transparent;
+            color: #198754;
+        }
+
+        .manager-market-tabs .tab-link.inactive:hover {
+            background: #e8f5ee;
+            color: #146c43;
+        }
+
+        .pig-stat-card {
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+        }
+
+        .pig-stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8f5ee;
+            color: #198754;
+            font-size: 1.25rem;
+        }
+
+        .pending-sale-card {
+            border: 1px solid #ffe8a1;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+        }
+
+        .pending-sale-card .card-header {
+            background: #fff9e6 !important;
+            border-bottom: 1px solid #ffe8a1;
+        }
+
+        .pig-table-card {
+            overflow: visible;
+        }
+
+        .pig-table-card .table {
+            margin-bottom: 0;
+        }
+
+        .pig-table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: .5rem;
+        }
+
+        .pig-table {
+            min-width: 1650px;
+            table-layout: auto;
+        }
+
+        .pig-table th,
+        .pig-table td {
+            white-space: nowrap;
+            vertical-align: middle;
+            padding: .9rem .85rem;
+        }
+
+        .pig-table .pig-code-col {
+            min-width: 130px;
+        }
+
+        .pig-table .pig-category-col {
+            min-width: 150px;
+        }
+
+        .pig-table .pig-status-col {
+            min-width: 170px;
+        }
+
+        .pig-table .pig-genetics-col {
+            min-width: 150px;
+        }
+
+        .pig-table .pig-notes-col {
+            min-width: 260px;
+            max-width: 360px;
+            white-space: normal;
+            line-height: 1.45;
+        }
+
+        .pig-table .pig-actions-col {
+            min-width: 310px;
+        }
+
+        .pig-row td {
+            border-bottom: 1px solid #eef2f0;
+        }
+
+        .pig-photo,
+        .pig-photo-placeholder {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #f8f9fa;
+        }
+
+        .pig-photo {
+            object-fit: cover;
+        }
+
+        .pig-photo-placeholder {
+            color: #9aa4ad;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pig-action-btn {
+            min-width: 92px;
+            height: 36px;
+            padding: 0 .75rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            border-radius: 10px;
+            flex-shrink: 0;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .pig-filter-menu {
+            min-width: 270px;
+            max-height: 430px;
+            overflow-y: auto;
+            border-radius: 14px;
+            border: 1px solid #dce8df;
+            box-shadow: 0 16px 32px rgba(15, 23, 42, .12);
+        }
+
+        .pig-filter-menu .dropdown-item {
+            font-weight: 600;
+            padding: .55rem 1rem;
+        }
+
+        .pig-filter-menu .dropdown-header {
+            font-weight: 800;
+            color: #198754;
+        }
+
+        .pig-pagination-footer {
+            padding: 1.25rem;
+        }
+
+        .pig-pagination-info {
+            text-align: center;
+            margin-bottom: .75rem;
+        }
+
+        .pig-pagination-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pig-pagination {
+            display: flex;
+            gap: .55rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 0;
+        }
+
+        .pig-pagination .page-item .page-link {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 14px;
+            border: 1px solid #d7e7dc;
+            background: #ffffff;
+            color: #1f7a4d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .pig-pagination .page-item.active .page-link {
+            background: #198754;
+            border-color: #198754;
+            color: #ffffff;
+        }
+
+        .pig-pagination .page-item.disabled .page-link {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+            color: #9aa4ad;
+            pointer-events: none;
+        }
+
+        @media (max-width: 992px) {
+            .pig-header-wrap {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 1rem;
+            }
+
+            .pig-header-tools {
+                width: 100%;
+                max-width: none;
+                min-width: 0;
+            }
+
+            .manager-market-tabs {
+                width: 100%;
+            }
+
+            .manager-market-tabs .tab-link {
+                width: 50%;
+                min-width: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex">
+    <th:block th:replace="~{layout/base :: sidebar}"></th:block>
+
+    <div id="main-content" class="flex-grow-1 p-4 overflow-auto">
+        <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+        <div class="d-flex align-items-center justify-content-between mb-4 pig-header-wrap">
+            <div class="d-flex align-items-center">
+                <a th:href="@{/manager/dashboard}" class="btn btn-sm btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="bi bi-piggy-bank me-2 text-success"></i>
+                        Pigs
+                    </h2>
+
+                    <div class="text-muted small" th:if="${farm != null}">
+                        Farm:
+                        <span class="fw-semibold" th:text="${farm.name}">Farm</span>
+                    </div>
+
+                    <div class="text-muted small" th:if="${farm == null}">
+                        No farm assigned.
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 justify-content-end pig-header-tools">
+                <input type="text" id="pigSearchInput" class="form-control pig-header-search"
+                    placeholder="Search this list..." />
+
+                <button type="button" class="btn btn-success text-nowrap" data-bs-toggle="modal"
+                    data-bs-target="#addPurchasedPigModal" th:disabled="${farm == null}">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Add Pig
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${farm == null}" class="alert alert-warning glass-card py-2 mb-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            No farm assigned. Contact admin.
+        </div>
+
+        <div class="d-flex justify-content-center mb-4">
+            <div class="manager-market-tabs">
+                <a th:href="@{/manager/pigs}" class="tab-link active">
+                    <i class="bi bi-piggy-bank me-2"></i>
+                    Pigs
+                </a>
+
+                <a th:href="@{/manager/semen}" class="tab-link inactive">
+                    <i class="bi bi-droplet-half me-2"></i>
+                    Semen
+                </a>
+            </div>
+        </div>
+
+        <div th:if="${farm != null}">
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card pig-stat-card h-100">
+                        <div class="card-body d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small">Total Pigs</div>
+                                <h3 class="fw-bold mb-0" th:text="${pigs != null ? #lists.size(pigs) : 0}">0</h3>
+                            </div>
+
+                            <div class="pig-stat-icon">
+                                <i class="bi bi-piggy-bank"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card pig-stat-card h-100">
+                        <div class="card-body">
+                            <div class="text-muted small">Pending Sale</div>
+                            <h3 class="fw-bold mb-0"
+                                th:text="${pendingSalePigs != null ? #lists.size(pendingSalePigs) : 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card pig-stat-card h-100">
+                        <div class="card-body">
+                            <div class="text-muted small">For Sale</div>
+                            <h3 class="fw-bold mb-0" th:text="${forSalePigs != null ? #lists.size(forSalePigs) : 0}">0
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card pig-stat-card h-100">
+                        <div class="card-body">
+                            <div class="text-muted small">Breeding Stock</div>
+                            <h3 class="fw-bold mb-0"
+                                th:text="${breedingStock != null ? #lists.size(breedingStock) : 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Sale Approval -->
+            <div class="card pending-sale-card mb-4"
+                th:if="${pendingSalePigs != null && !#lists.isEmpty(pendingSalePigs)}">
+
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-hourglass-split me-2 text-warning"></i>
+                            Pending Sale Approval
+                        </h5>
+                        <small class="text-muted">
+                            Supervisor requested these pigs to be listed in marketplace.
+                        </small>
+                    </div>
+
+                    <span class="badge bg-warning text-dark" th:text="${#lists.size(pendingSalePigs)}">0</span>
+                </div>
+
+                <div class="table-responsive pig-table-scroll">
+                    <table class="table table-hover align-middle mb-0 pig-table" data-no-live-search="true">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Pig Code</th>
+                                <th>Building</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Weight</th>
+                                <th>Sale Price</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr th:each="pig : ${pendingSalePigs}">
+                                <td><code th:text="${pig.code}">PIG</code></td>
+
+                                <td th:text="${pig.building != null ? pig.building.name : '-'}">Building</td>
+
+                                <td>
+                                    <span th:if="${pig.birthDate != null}" th:text="${pig.ageInDays + ' days'}">0
+                                        days</span>
+                                    <span th:if="${pig.birthDate == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td th:text="${pig.gender != null ? pig.gender : '-'}">-</td>
+
+                                <td>
+                                    <span th:if="${pig.currentWeight != null}" th:text="${pig.currentWeight + ' kg'}">0
+                                        kg</span>
+                                    <span th:if="${pig.currentWeight == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td>
+                                    <span th:if="${pig.salePrice != null}"
+                                        th:text="${#numbers.formatDecimal(pig.salePrice, 0, 'COMMA', 0, 'POINT') + ' MMK'}">
+                                        0 MMK
+                                    </span>
+                                    <span th:if="${pig.salePrice == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        Pending Manager Approval
+                                    </span>
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
+                                        <form th:action="@{/manager/pigs/{id}/approve-sale(id=${pig.id})}"
+                                            method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
+
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Approve
+                                            </button>
+                                        </form>
+
+                                        <form th:action="@{/manager/pigs/{id}/reject-sale(id=${pig.id})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-x-circle me-1"></i>
+                                                Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pig List -->
+            <div class="card glass-card border-0 shadow-sm pig-table-card">
+                <div
+                    class="card-header bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-funnel me-2 text-success"></i>
+                            Pig List
+                        </h6>
+                        <small class="text-muted">Choose a category from dropdown</small>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn btn-success dropdown-toggle" type="button" id="pigFilterDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            All Pigs
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end pig-filter-menu" aria-labelledby="pigFilterDropdown">
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="all">
+                                    All
+                                    <span class="badge bg-secondary ms-1"
+                                        th:text="${pigs != null ? #lists.size(pigs) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <h6 class="dropdown-header">Age Groups</h6>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="small">
+                                    Small / Piglets
+                                    <span class="badge bg-info text-dark ms-1"
+                                        th:text="${smallPigs != null ? #lists.size(smallPigs) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="medium">
+                                    Medium / Growers
+                                    <span class="badge bg-secondary ms-1"
+                                        th:text="${mediumPigs != null ? #lists.size(mediumPigs) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="large">
+                                    Large / Finishers
+                                    <span class="badge bg-secondary ms-1"
+                                        th:text="${largePigs != null ? #lists.size(largePigs) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <h6 class="dropdown-header">Breeding Groups</h6>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter"
+                                    data-filter="breeding-stock">
+                                    Breeding Stock
+                                    <span class="badge bg-success ms-1"
+                                        th:text="${breedingStock != null ? #lists.size(breedingStock) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="boar">
+                                    Breeding Boars
+                                    <span class="badge bg-primary ms-1"
+                                        th:text="${breedingBoars != null ? #lists.size(breedingBoars) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="sow">
+                                    Breeding Sows
+                                    <span class="badge bg-success ms-1"
+                                        th:text="${breedingSows != null ? #lists.size(breedingSows) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="mated-sow">
+                                    Mated Sows
+                                    <span class="badge bg-success ms-1"
+                                        th:text="${matedSows != null ? #lists.size(matedSows) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter"
+                                    data-filter="unmated-sow">
+                                    Unmated Sows
+                                    <span class="badge bg-warning text-dark ms-1"
+                                        th:text="${unmatedSows != null ? #lists.size(unmatedSows) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <h6 class="dropdown-header">Sale Status</h6>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter"
+                                    data-filter="pending-sale">
+                                    Pending Sale Approval
+                                    <span class="badge bg-warning text-dark ms-1"
+                                        th:text="${pendingSalePigs != null ? #lists.size(pendingSalePigs) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="for-sale">
+                                    For Sale
+                                    <span class="badge bg-success ms-1"
+                                        th:text="${forSalePigs != null ? #lists.size(forSalePigs) : 0}">0</span>
+                                </button>
+                            </li>
+
+                            <li>
+                                <button type="button" class="dropdown-item pig-dropdown-filter" data-filter="sold">
+                                    Sold
+                                    <span class="badge bg-danger ms-1"
+                                        th:text="${soldPigs != null ? #lists.size(soldPigs) : 0}">0</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div th:if="${pigs == null || #lists.isEmpty(pigs)}" class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No pigs found in this farm.
+                </div>
+
+                <div th:if="${pigs != null && !#lists.isEmpty(pigs)}" class="table-responsive pig-table-scroll">
+
+                    <table class="table table-hover align-middle mb-0 pig-table" id="pigTable"
+                        data-no-live-search="true">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Photo</th>
+                                <th class="pig-code-col">Pig Code</th>
+                                <th class="pig-category-col">Category</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th class="pig-status-col">Status</th>
+                                <th class="pig-genetics-col">Genetics</th>
+                                <th>Mother</th>
+                                <th>Birth Date</th>
+                                <th>Weight</th>
+                                <th>Sale Price</th>
+                                <th class="pig-notes-col">Notes</th>
+                                <th class="pig-actions-col">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr th:each="pig : ${pigs}" class="pig-row" th:attr="data-groups=${
+                        pig.status != null && pig.status.name() == 'BREEDING_BOAR' ? 'all breeding-stock boar' :
+                        pig.status != null && pig.status.name() == 'BREEDING_SOW' && pig.notes != null && pig.notes.contains('Breeding Record:') ? 'all breeding-stock sow mated-sow' :
+                        pig.status != null && pig.status.name() == 'BREEDING_SOW' ? 'all breeding-stock sow unmated-sow' :
+                        pig.status != null && pig.status.name() == 'PIGLET' ? 'all small' :
+                        pig.status != null && pig.status.name() == 'GROWER' ? 'all medium' :
+                        pig.status != null && pig.status.name() == 'FINISHER' ? 'all large' :
+                        pig.status != null && pig.status.name() == 'PENDING_SALE_APPROVAL' ? 'all pending-sale' :
+                        pig.status != null && pig.status.name() == 'FOR_SALE' ? 'all for-sale' :
+                        pig.status != null && pig.status.name() == 'SOLD' ? 'all sold' :
+                        'all'
+                    }">
+
+                                <td class="pig-row-number">1.</td>
+
+                                <td>
+                                    <img th:if="${pig.photoPath != null && !pig.photoPath.isBlank()}"
+                                        th:src="@{${pig.photoPath}}" alt="Pig photo" class="pig-photo" />
+
+                                    <div th:if="${pig.photoPath == null || pig.photoPath.isBlank()}"
+                                        class="pig-photo-placeholder">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                </td>
+
+                                <td><code th:text="${pig.code}">PIG001</code></td>
+
+                                <td>
+                                    <span th:if="${pig.status != null && pig.status.name() == 'BREEDING_BOAR'}"
+                                        class="badge bg-primary">Breeding Boar</span>
+
+                                    <span
+                                        th:if="${pig.status != null && pig.status.name() == 'BREEDING_SOW' && pig.notes != null && pig.notes.contains('Breeding Record:')}"
+                                        class="badge bg-success">Mated Sow</span>
+
+                                    <span
+                                        th:if="${pig.status != null && pig.status.name() == 'BREEDING_SOW' && (pig.notes == null || !pig.notes.contains('Breeding Record:'))}"
+                                        class="badge bg-warning text-dark">Unmated Sow</span>
+
+                                    <span th:if="${pig.status != null && pig.status.name() == 'PIGLET'}"
+                                        class="badge bg-info text-dark">Small / Piglet</span>
+
+                                    <span th:if="${pig.status != null && pig.status.name() == 'GROWER'}"
+                                        class="badge bg-secondary">Medium / Grower</span>
+
+                                    <span th:if="${pig.status != null && pig.status.name() == 'FINISHER'}"
+                                        class="badge bg-secondary">Large / Finisher</span>
+
+                                    <span th:if="${pig.status != null && pig.status.name() == 'PENDING_SALE_APPROVAL'}"
+                                        class="badge bg-warning text-dark">Pending Sale</span>
+
+                                    <span th:if="${pig.status != null && pig.status.name() == 'FOR_SALE'}"
+                                        class="badge bg-success">For Sale</span>
+
+                                    <span th:if="${pig.status != null && pig.status.name() == 'SOLD'}"
+                                        class="badge bg-danger">Sold</span>
+
+                                    <span th:if="${pig.status == null}" class="badge bg-light text-dark">Unknown</span>
+                                </td>
+
+                                <td>
+                                    <span th:if="${pig.birthDate != null}" th:text="${pig.ageInDays + ' days'}">0
+                                        days</span>
+                                    <span th:if="${pig.birthDate == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td th:text="${pig.gender != null ? pig.gender : '-'}">-</td>
+
+                                <td>
+                                    <span class="badge bg-secondary"
+                                        th:text="${pig.status != null ? pig.status : '-'}">-</span>
+                                </td>
+
+                                <td th:text="${pig.genetics != null ? pig.genetics.name : '-'}">-</td>
+
+                                <td>
+                                    <code th:if="${pig.mother != null}" th:text="${pig.mother.code}">M001</code>
+                                    <span th:if="${pig.mother == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td
+                                    th:text="${pig.birthDate != null ? #temporals.format(pig.birthDate, 'dd MMM yyyy') : '-'}">
+                                    -
+                                </td>
+
+                                <td>
+                                    <span th:if="${pig.currentWeight != null}" th:text="${pig.currentWeight + ' kg'}">0
+                                        kg</span>
+                                    <span th:if="${pig.currentWeight == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td>
+                                    <span th:if="${pig.salePrice != null}" th:text="${pig.salePrice + ' MMK'}">0
+                                        MMK</span>
+                                    <span th:if="${pig.salePrice == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td class="pig-notes-col">
+                                    <span th:if="${pig.notes != null && pig.notes.length() > 80}"
+                                        th:text="${#strings.substring(pig.notes, 0, 80) + '...'}"></span>
+
+                                    <span th:if="${pig.notes != null && pig.notes.length() <= 80}"
+                                        th:text="${pig.notes}"></span>
+
+                                    <span th:if="${pig.notes == null}" class="text-muted">-</span>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <button type="button" class="btn btn-sm btn-outline-primary pig-action-btn"
+                                            data-bs-toggle="modal"
+                                            th:attr="data-bs-target=${'#editPigModal__' + pig.id}" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                            <span>Edit</span>
+                                        </button>
+
+                                        <form
+                                            th:if="${pig.status != null && pig.status.name() == 'PENDING_SALE_APPROVAL'}"
+                                            th:action="@{/manager/pigs/{id}/approve-sale(id=${pig.id})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
+
+                                            <button type="submit" class="btn btn-sm btn-success pig-action-btn"
+                                                title="Approve Sale">
+                                                <i class="bi bi-check-circle"></i>
+                                                <span>Approve</span>
+                                            </button>
+                                        </form>
+
+                                        <form
+                                            th:if="${pig.status != null && pig.status.name() == 'PENDING_SALE_APPROVAL'}"
+                                            th:action="@{/manager/pigs/{id}/reject-sale(id=${pig.id})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-danger pig-action-btn"
+                                                title="Reject Sale">
+                                                <i class="bi bi-x-circle"></i>
+                                                <span>Reject</span>
+                                            </button>
+                                        </form>
+
+                                        <form th:if="${pig.status != null && pig.status.name() == 'FOR_SALE'}"
+                                            th:action="@{/manager/pigs/{id}/unlist-sale(id=${pig.id})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-warning pig-action-btn"
+                                                title="Remove From Marketplace">
+                                                <i class="bi bi-eye-slash"></i>
+                                                <span>Unlist</span>
+                                            </button>
+                                        </form>
+                                        <form th:if="${pig.status != null && pig.status.name() == 'FINISHER'}"
+                                            th:action="@{/manager/pigs/{id}/list-sale(id=${pig.id})}" method="post">
+
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-success pig-action-btn"
+                                                title="List Again">
+
+                                                <i class="bi bi-eye"></i>
+                                                <span>List Again</span>
+
+                                            </button>
+
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr id="pigNoResultRow" class="d-none">
+                                <td colspan="14" class="text-center text-muted py-4">
+                                    <i class="bi bi-search me-2"></i>
+                                    No pigs match your search.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${pigs != null && !#lists.isEmpty(pigs)}"
+                    class="card-footer bg-transparent pig-pagination-footer">
+
+                    <div class="text-muted small pig-pagination-info" id="pigPaginationInfo">
+                        Showing 0 to 0 of 0 pigs
+                    </div>
+
+                    <div class="pig-pagination-wrap">
+                        <nav aria-label="Pig pagination">
+                            <ul class="pagination pig-pagination" id="pigPagination"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Purchased Pig Modal -->
+    <div class="modal fade" id="addPurchasedPigModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content glass-modal">
+                <form th:action="@{/manager/pigs/purchased}" method="post" enctype="multipart/form-data">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>
+                            Add Purchased Pig
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Pig Code</label>
+                                <input type="text" name="code" class="form-control" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Photo</label>
+                                <input type="file" name="photo" class="form-control" accept="image/*" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Building</label>
+                                <select name="buildingId" class="form-select" required>
+                                    <option value="">Choose building</option>
+                                    <option th:each="b : ${buildings}" th:value="${b.id}" th:text="${b.name}">
+                                        Building
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Genetics</label>
+                                <select name="geneticsId" class="form-select" required>
+                                    <option value="">Choose genetics</option>
+                                    <option th:each="g : ${genetics}" th:value="${g.id}" th:text="${g.name}">
+                                        Genetics
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Gender</label>
+                                <select name="gender" class="form-select" required>
+                                    <option value="">Choose gender</option>
+                                    <option value="MALE">MALE</option>
+                                    <option value="FEMALE">FEMALE</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Status</label>
+                                <select name="status" class="form-select" required>
+                                    <option value="">Choose status</option>
+                                    <option th:each="s : ${pigStatuses}"
+                                        th:if="${s.name() != 'PENDING_SALE_APPROVAL' && s.name() != 'FOR_SALE' && s.name() != 'SOLD'}"
+                                        th:value="${s}" th:text="${s}">
+                                        PIGLET
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Birth Date</label>
+                                <input type="date" name="birthDate" class="form-control" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Current Weight KG</label>
+                                <input type="number" step="0.01" min="0" name="currentWeight" class="form-control"
+                                    required />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Notes</label>
+                                <textarea name="notes" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Save Pig
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Pig Modals -->
+    <th:block th:if="${pigs != null}">
+        <div th:each="pig : ${pigs}" class="modal fade" th:id="${'editPigModal__' + pig.id}" tabindex="-1"
+            aria-hidden="true">
+
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content glass-modal">
+                    <form th:action="@{'/manager/pigs/' + ${pig.id} + '/update'}" method="post"
+                        enctype="multipart/form-data">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold">
+                                <i class="bi bi-pencil-square me-2 text-primary"></i>
+                                Edit Pig
+                                <code th:text="${pig.code}">PIG001</code>
+                            </h5>
+
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Building</label>
+                                    <select name="buildingId" class="form-select" required>
+                                        <option th:each="b : ${buildings}" th:value="${b.id}"
+                                            th:selected="${pig.building != null && pig.building.id == b.id}"
+                                            th:text="${b.name}">
+                                            Building
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Genetics</label>
+                                    <select name="geneticsId" class="form-select" required>
+                                        <option th:each="g : ${genetics}" th:value="${g.id}"
+                                            th:selected="${pig.genetics != null && pig.genetics.id == g.id}"
+                                            th:text="${g.name}">
+                                            Genetics
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Gender</label>
+                                    <select name="gender" class="form-select" required>
+                                        <option value="MALE"
+                                            th:selected="${pig.gender != null && pig.gender.name() == 'MALE'}">
+                                            MALE
+                                        </option>
+
+                                        <option value="FEMALE"
+                                            th:selected="${pig.gender != null && pig.gender.name() == 'FEMALE'}">
+                                            FEMALE
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Status</label>
+                                    <select name="status" class="form-select" required>
+                                        <option th:each="s : ${pigStatuses}" th:value="${s}"
+                                            th:selected="${pig.status != null && pig.status == s}" th:text="${s}">
+                                            PIGLET
+                                        </option>
+                                    </select>
+
+                                    <small class="text-muted d-block mt-1">
+                                        Manager can edit pigs even when they are pending, for sale, or sold.
+                                    </small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Birth Date</label>
+                                    <input type="date" name="birthDate" class="form-control" th:value="${pig.birthDate}"
+                                        required />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Current Weight KG</label>
+                                    <input type="number" step="0.01" min="0" name="currentWeight" class="form-control"
+                                        th:value="${pig.currentWeight != null ? pig.currentWeight : 0}" required />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Sale Price</label>
+                                    <input type="number" step="0.01" min="0" name="price" class="form-control"
+                                        th:value="${pig.salePrice != null ? pig.salePrice : 0}" />
+
+                                    <small class="text-muted">
+                                        Required when status is PENDING_SALE_APPROVAL or FOR_SALE.
+                                    </small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Change Photo</label>
+                                    <input type="file" name="photo" class="form-control" accept="image/*" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Notes</label>
+                                    <textarea name="notes" class="form-control" rows="3"
+                                        th:text="${pig.notes}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Update Pig
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = Array.from(document.querySelectorAll('.pig-row'));
+            const searchInput = document.getElementById('pigSearchInput');
+            const dropdownFilterButtons = document.querySelectorAll('.pig-dropdown-filter');
+            const pigFilterDropdown = document.getElementById('pigFilterDropdown');
+            const noResultRow = document.getElementById('pigNoResultRow');
+            const pagination = document.getElementById('pigPagination');
+            const paginationInfo = document.getElementById('pigPaginationInfo');
+
+            const pageSize = 5;
+            let activeFilter = 'all';
+            let currentPage = 1;
+            let filteredRows = [];
+
+            function rowMatchesFilter(row) {
+                const groups = (row.getAttribute('data-groups') || 'all').split(/\s+/);
+                return activeFilter === 'all' || groups.includes(activeFilter);
+            }
+
+            function rowMatchesSearch(row) {
+                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                return !query || row.innerText.toLowerCase().includes(query);
+            }
+
+            function calculateFilteredRows() {
+                filteredRows = rows.filter(function (row) {
+                    return rowMatchesFilter(row) && rowMatchesSearch(row);
+                });
+            }
+
+            function renderRows() {
+                rows.forEach(function (row) {
+                    row.style.display = 'none';
+                });
+
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, total);
+
+                filteredRows.slice(startIndex, endIndex).forEach(function (row, index) {
+                    row.style.display = '';
+
+                    const numberCell = row.querySelector('.pig-row-number');
+
+                    if (numberCell) {
+                        numberCell.textContent = (startIndex + index + 1) + '.';
+                    }
+                });
+
+                if (noResultRow) {
+                    noResultRow.classList.toggle('d-none', total > 0);
+                }
+
+                if (paginationInfo) {
+                    paginationInfo.textContent = total === 0
+                        ? 'Showing 0 to 0 of 0 pigs'
+                        : 'Showing ' + (startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' pigs';
+                }
+
+                renderPagination(totalPages);
+            }
+
+            function createPageItem(label, disabled, active, clickHandler) {
+                const li = document.createElement('li');
+
+                li.className = 'page-item'
+                    + (disabled ? ' disabled' : '')
+                    + (active ? ' active' : '');
+
+                const btn = document.createElement('button');
+                btn.className = 'page-link';
+                btn.type = 'button';
+                btn.innerHTML = label;
+
+                if (!disabled && typeof clickHandler === 'function') {
+                    btn.addEventListener('click', clickHandler);
+                }
+
+                li.appendChild(btn);
+                return li;
+            }
+
+            function renderPagination(totalPages) {
+                if (!pagination) {
+                    return;
+                }
+
+                pagination.innerHTML = '';
+
+                if (filteredRows.length <= pageSize) {
+                    return;
+                }
+
+                pagination.appendChild(createPageItem(
+                    '<i class="bi bi-chevron-left"></i>',
+                    currentPage === 1,
+                    false,
+                    function () {
+                        currentPage--;
+                        renderRows();
+                    }
+                ));
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                        pagination.appendChild(createPageItem(
+                            String(i),
+                            false,
+                            i === currentPage,
+                            function () {
+                                currentPage = i;
+                                renderRows();
+                            }
+                        ));
+                    } else if (i === currentPage - 3 || i === currentPage + 3) {
+                        pagination.appendChild(createPageItem('...', true, false, null));
+                    }
+                }
+
+                pagination.appendChild(createPageItem(
+                    '<i class="bi bi-chevron-right"></i>',
+                    currentPage === totalPages,
+                    false,
+                    function () {
+                        currentPage++;
+                        renderRows();
+                    }
+                ));
+            }
+
+            function applyPigFilters(resetPage) {
+                if (resetPage) {
+                    currentPage = 1;
+                }
+
+                calculateFilteredRows();
+                renderRows();
+            }
+
+            dropdownFilterButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    activeFilter = button.getAttribute('data-filter') || 'all';
+
+                    if (pigFilterDropdown) {
+                        pigFilterDropdown.textContent = button.childNodes[0].textContent.trim();
+                    }
+
+                    applyPigFilters(true);
+                });
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    applyPigFilters(true);
+                });
+            }
+
+            applyPigFilters(true);
+        });
+    </script>
+
+</body>
+
+</html>

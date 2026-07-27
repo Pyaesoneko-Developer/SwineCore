@@ -1,0 +1,25 @@
+2026-07-16T23:51:19.851+06:30  INFO 7200 --- [SwineCore] [main] c.e.swinecore.SwineCoreApplication       : Starting SwineCoreApplication v1.0.0 using Java 21.0.10 with PID 7200 (C:\Users\PSK\Documents\Codex\2026-07-16\files-mentioned-by-the-user-doctype\work\swinecore-integrated\target\swinecore-1.0.0.jar started by Lenovo in C:\Users\PSK\Documents\Codex\2026-07-16\files-mentioned-by-the-user-doctype\work\swinecore-integrated)
+2026-07-16T23:51:19.857+06:30  INFO 7200 --- [SwineCore] [main] c.e.swinecore.SwineCoreApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-07-16T23:51:22.247+06:30  INFO 7200 --- [SwineCore] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-16T23:51:22.472+06:30  INFO 7200 --- [SwineCore] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 210 ms. Found 21 JPA repository interfaces.
+2026-07-16T23:51:24.355+06:30  INFO 7200 --- [SwineCore] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8095 (http)
+2026-07-16T23:51:24.401+06:30  INFO 7200 --- [SwineCore] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-16T23:51:24.402+06:30  INFO 7200 --- [SwineCore] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-16T23:51:24.499+06:30  INFO 7200 --- [SwineCore] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-07-16T23:51:24.500+06:30  INFO 7200 --- [SwineCore] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4496 ms
+2026-07-16T23:51:24.980+06:30  INFO 7200 --- [SwineCore] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-16T23:51:25.177+06:30  INFO 7200 --- [SwineCore] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-07-16T23:51:25.295+06:30  INFO 7200 --- [SwineCore] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-16T23:51:26.251+06:30  INFO 7200 --- [SwineCore] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-16T23:51:26.338+06:30  INFO 7200 --- [SwineCore] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-16T23:51:26.773+06:30  INFO 7200 --- [SwineCore] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4aeaff64
+2026-07-16T23:51:26.777+06:30  INFO 7200 --- [SwineCore] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-16T23:51:26.916+06:30  WARN 7200 --- [SwineCore] [main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-16T23:51:30.062+06:30  INFO 7200 --- [SwineCore] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-16T23:51:40.709+06:30  INFO 7200 --- [SwineCore] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-16T23:51:41.654+06:30  INFO 7200 --- [SwineCore] [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-16T23:51:45.446+06:30  WARN 7200 --- [SwineCore] [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-07-16T23:51:47.180+06:30  INFO 7200 --- [SwineCore] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8095 (http) with context path '/'
+2026-07-16T23:51:47.224+06:30  INFO 7200 --- [SwineCore] [main] c.e.swinecore.SwineCoreApplication       : Started SwineCoreApplication in 28.753 seconds (process running for 30.253)
+2026-07-16T23:51:47.880+06:30  INFO 7200 --- [SwineCore] [main] c.e.s.service.DataInitializerService     : Default admin account created: admin@swinecore.com / Admin@1234
+2026-07-16T23:51:47.920+06:30  INFO 7200 --- [SwineCore] [main] c.e.s.service.DataInitializerService     : Default pig genetics seeded.

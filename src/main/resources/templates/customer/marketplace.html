@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Marketplace | SwineCore</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/css/customer-ui.css}"/>
+</head>
+<body class="marketplace-shell customer-ui">
+<!-- Top Nav -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+    <a class="navbar-brand fw-bold" href="/marketplace"><img th:src="@{/images/logo.png}" style="height:24px;" class="me-2" alt="SwineCore"/>SwineCore</a>
+    <div class="ms-auto d-flex gap-2">
+        <a th:if="${!isLoggedIn}" th:href="@{/auth/login}" class="btn btn-outline-light btn-sm">Login</a>
+        <a th:if="${!isLoggedIn}" th:href="@{/customer/register}" class="btn btn-success btn-sm">Register</a>
+        <a th:if="${isLoggedIn}" th:href="@{/customer/dashboard}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-person-circle me-1"></i>My Account
+        </a>
+        <a th:if="${isLoggedIn}" th:href="@{/customer/pigs}" class="btn btn-success btn-sm">
+            <i class="bi bi-cart me-1"></i>Buy Pigs
+        </a>
+        <a th:if="${isLoggedIn}" th:href="@{/customer/semen}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-capsule me-1"></i>Semen Marketplace
+        </a>
+    </div>
+</nav>
+
+<!-- Hero -->
+<div class="py-5 px-4 text-center marketplace-hero">
+    <img th:src="@{/images/logo.png}" style="height:80px;" class="mb-3 d-block mx-auto" alt="SwineCore"/>
+    <h1 class="display-5 fw-bold text-white">SwineCore Marketplace</h1>
+    <p class="lead" style="color:var(--text-footer);">Premium pigs and genetics from certified farms</p>
+    <div th:unless="${isLoggedIn}" class="mt-3">
+        <a th:href="@{/customer/register}" class="btn btn-success btn-lg me-2">
+            <i class="bi bi-person-plus me-2"></i>Register
+        </a>
+        <a th:href="@{/auth/login}" class="btn btn-outline-light btn-lg">Login</a>
+    </div>
+</div>
+
+<div class="container-lg py-5">
+    <!-- Farm Ads -->
+    <div th:unless="${#lists.isEmpty(ads)}" class="mb-5">
+        <h3 class="fw-bold mb-3"><i class="bi bi-megaphone me-2 text-success"></i>Featured Farms</h3>
+        <div class="marketplace-rail">
+            <div th:each="ad : ${ads}">
+                <div class="card border-0 shadow-sm h-100">
+                    <img th:if="${ad.imagePath != null}" th:src="${ad.imagePath}" class="card-img-top" loading="lazy" decoding="async" alt="Ad image"
+                         style="height:200px; object-fit:cover;"/>
+                    <div class="card-body">
+                        <h6 class="fw-bold" th:text="${ad.title}"></h6>
+                        <p class="text-muted small" th:text="${ad.description}"></p>
+                        <span class="badge" style="background:var(--badge-secondary-bg);color:var(--badge-secondary-text);" th:text="${ad.farm.name}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Pigs (visible to all, purchase requires login) -->
+    <h3 class="fw-bold mb-3"><i class="bi bi-piggy-bank me-2"></i>Pigs Available for Sale</h3>
+    <div th:unless="${isLoggedIn}" class="alert alert-info mb-3 small">
+        <i class="bi bi-lock me-2"></i>Please <a th:href="@{/auth/login}">login</a> or <a th:href="@{/customer/register}">register</a> to use search filters and make purchases.
+    </div>
+    <div class="marketplace-rail">
+        <div th:each="pig : ${pigs}">
+            <div class="card border-0 shadow-sm h-100">
+                <img th:src="${pig.photoPath != null and !#strings.isEmpty(pig.photoPath) ? pig.photoPath : '/images/pigs/demo-piglets.jpg'}" class="card-img-top" style="height:190px;object-fit:cover" loading="lazy" decoding="async" th:alt="${'Pig '+pig.code}"/>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-success" th:text="${#numbers.formatDecimal(pig.salePrice,0,'COMMA',0,'POINT')} + ' MMK'"></span>
+                        <small class="text-muted" th:text="${pig.genetics.name}"></small>
+                    </div>
+                    <code class="d-block mb-1 small" th:text="${pig.code}"></code>
+                    <div class="small text-muted">
+                        <span th:text="${pig.gender}"></span> •
+                        <span th:text="${pig.ageInDays} + ' days old'"></span>
+                    </div>
+                    <div class="mt-2 small text-muted" th:text="${pig.building.farm.name}"></div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a th:if="${isLoggedIn}" th:href="@{/customer/pigs}" class="btn btn-success btn-sm w-100">
+                        <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                    </a>
+                    <a th:unless="${isLoggedIn}" th:href="@{/auth/login}" class="btn btn-outline-secondary btn-sm w-100">
+                        Login to Buy
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12" th:if="${#lists.isEmpty(pigs)}">
+            <p class="text-center text-muted py-4">No pigs available for sale at this time.</p>
+        </div>
+    </div>
+</div>
+
+<footer class="py-3 text-center small mt-auto" style="background:var(--bg-footer);color:var(--text-footer);">
+    &copy; 2026 SwineCore. All rights reserved.
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

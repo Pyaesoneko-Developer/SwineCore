@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/base :: head}"></head>
+
+<body class="d-flex">
+    <th:block th:replace="~{layout/base :: sidebar}"></th:block>
+
+    <main id="main-content" class="flex-grow-1 p-4 overflow-auto">
+        <th:block th:replace="~{layout/base :: alerts}"></th:block>
+
+        <style>
+            .ops-summary-card {
+                border: 0;
+                border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+            }
+
+            .ops-table-card {
+                border: 0;
+                border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+                overflow: hidden;
+            }
+
+            .ops-page-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .ops-global-search {
+                width: 320px;
+                height: 42px;
+                border-radius: 12px;
+            }
+
+            .ops-toolbar {
+                display: flex;
+                align-items: center;
+                gap: .75rem;
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .ops-filter-wrap {
+                margin-left: auto;
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .ops-filter {
+                width: 220px;
+                height: 42px;
+                border-radius: 12px;
+            }
+
+            .ops-pagination-footer {
+                padding: 1rem;
+                border-top: 1px solid #eef2f0;
+                background: #fff;
+            }
+
+            .ops-pagination-info {
+                text-align: center;
+                margin-bottom: .75rem;
+                color: #6c757d;
+                font-size: .875rem;
+            }
+
+            .ops-pagination-wrap {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .ops-pagination {
+                display: flex;
+                gap: .5rem;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-bottom: 0;
+            }
+
+            .ops-pagination .page-link {
+                min-width: 42px;
+                height: 42px;
+                padding: 0 12px;
+                border-radius: 12px;
+                border: 1px solid #d7e7dc;
+                background: #ffffff;
+                color: #1f7a4d;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                box-shadow: none;
+                cursor: pointer;
+            }
+
+            .ops-pagination .page-link:hover {
+                background: #f3faf6;
+                border-color: #8fc7a7;
+                color: #146c43;
+            }
+
+            .ops-pagination .page-item.active .page-link {
+                background: #198754;
+                border-color: #198754;
+                color: #ffffff;
+            }
+
+            .ops-pagination .page-item.disabled .page-link {
+                background: #f8f9fa;
+                border-color: #e9ecef;
+                color: #9aa4ad;
+                pointer-events: none;
+            }
+
+            .ops-action-group {
+                display: flex;
+                gap: .45rem;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            .ops-action-btn {
+                border-radius: 10px;
+                font-weight: 700;
+            }
+
+            .nav-tabs .nav-link {
+                font-weight: 700;
+            }
+
+            .nav-tabs .dropdown-menu .dropdown-item.active,
+            .nav-tabs .dropdown-menu .dropdown-item:active {
+                background-color: #198754;
+                color: #ffffff;
+            }
+
+            .nav-tabs .dropdown-toggle {
+                font-weight: 700;
+            }
+
+            @media (max-width: 768px) {
+                .ops-global-search {
+                    width: 100%;
+                }
+
+                .ops-filter-wrap {
+                    width: 100%;
+                }
+
+                .ops-filter {
+                    width: 100%;
+                }
+
+                .ops-toolbar {
+                    align-items: stretch;
+                }
+            }
+        </style>
+
+        <div class="ops-page-header mb-4">
+            <h2 class="fw-bold mb-0">Operations, Reports & Finance</h2>
+
+            <input type="text" id="opsGlobalSearchInput" class="form-control ops-global-search"
+                placeholder="Search this list..." />
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card ops-summary-card">
+                    <div class="card-body">
+                        <small class="text-muted">Total Income</small>
+                        <h3 class="text-success mb-0"
+                            th:text="${#numbers.formatDecimal(totalIncome,0,'COMMA',0,'POINT')}+' MMK'">
+                            0 MMK
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card ops-summary-card">
+                    <div class="card-body">
+                        <small class="text-muted">Total Expense</small>
+                        <h3 class="text-danger mb-0"
+                            th:text="${#numbers.formatDecimal(totalExpense,0,'COMMA',0,'POINT')}+' MMK'">
+                            0 MMK
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card ops-summary-card">
+                    <div class="card-body">
+                        <small class="text-muted">Net Finance</small>
+                        <h3 class="text-primary mb-0"
+                            th:text="${#numbers.formatDecimal(netFinance,0,'COMMA',0,'POINT')}+' MMK'">
+                            0 MMK
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item dropdown" role="presentation">
+                <button class="nav-link dropdown-toggle active" id="orders-tab" data-bs-toggle="dropdown" type="button"
+                    aria-expanded="false" aria-selected="true">
+                    Pig Orders
+                </button>
+
+                <ul class="dropdown-menu">
+                    <li>
+                        <button class="dropdown-item active" type="button" data-order-type="pig">
+                            Pig Orders
+                        </button>
+                    </li>
+
+                    <li>
+                        <button class="dropdown-item" type="button" data-order-type="semen">
+                            Semen Orders
+                        </button>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="finance-tab" data-bs-toggle="tab" data-bs-target="#finance" type="button"
+                    role="tab" aria-controls="finance" aria-selected="false">
+                    Finance
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance"
+                    type="button" role="tab" aria-controls="attendance" aria-selected="false">
+                    Attendance
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button"
+                    role="tab" aria-controls="reports" aria-selected="false">
+                    Manager Reports
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- Orders -->
+            <section id="orders" class="tab-pane fade show active" role="tabpanel" aria-labelledby="orders-tab">
+
+                <!-- Pig Orders -->
+                <div id="pigOrdersBox" class="card ops-table-card mb-4 ops-table-box" data-table-title="Pig Orders">
+
+                    <div class="card-header bg-transparent">
+                        <div class="ops-toolbar">
+                            <div>
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-piggy-bank me-2 text-success"></i>
+                                    Pig Orders
+                                </h6>
+                                <small class="text-muted">Filter pig orders by status</small>
+                            </div>
+
+                            <div class="ops-filter-wrap">
+                                <select class="form-select ops-filter" data-ops-filter>
+                                    <option value="all">All Status</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Reference</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Paid At</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr class="ops-row" th:each="o:${pigOrders}" th:attr="data-filter=${o.status}">
+                                    <td class="ops-row-number">1.</td>
+                                    <td th:text="${o.orderReference}">REF</td>
+                                    <td th:text="${o.customer.name}">Customer</td>
+                                    <td th:text="${o.totalAmount}">0</td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${o.status}">STATUS</span>
+                                    </td>
+                                    <td th:text="${o.paidAt}">-</td>
+                                </tr>
+
+                                <tr class="ops-no-result d-none">
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-search me-2"></i>
+                                        No pig orders found.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="ops-pagination-footer">
+                        <div class="ops-pagination-info" data-ops-info>
+                            Showing 0 to 0 of 0 Pig Orders
+                        </div>
+
+                        <div class="ops-pagination-wrap">
+                            <nav>
+                                <ul class="pagination ops-pagination" data-ops-pagination></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Semen Orders -->
+                <div id="semenOrdersBox" class="card ops-table-card ops-table-box d-none"
+                    data-table-title="Semen Orders">
+
+                    <div class="card-header bg-transparent">
+                        <div class="ops-toolbar">
+                            <div>
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-droplet-half me-2 text-primary"></i>
+                                    Semen Orders
+                                </h6>
+                                <small class="text-muted">Filter semen orders by status</small>
+                            </div>
+
+                            <div class="ops-filter-wrap">
+                                <select class="form-select ops-filter" data-ops-filter>
+                                    <option value="all">All Status</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Reference</th>
+                                    <th>Customer</th>
+                                    <th>Boar</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr class="ops-row" th:each="o:${semenOrders}" th:attr="data-filter=${o.status}">
+                                    <td class="ops-row-number">1.</td>
+                                    <td th:text="${o.orderReference}">REF</td>
+                                    <td th:text="${o.customer.name}">Customer</td>
+                                    <td th:text="${o.boar.code}">BOAR</td>
+                                    <td th:text="${o.quantity}">0</td>
+                                    <td th:text="${o.totalAmount}">0</td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${o.status}">STATUS</span>
+                                    </td>
+                                </tr>
+
+                                <tr class="ops-no-result d-none">
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="bi bi-search me-2"></i>
+                                        No semen orders found.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="ops-pagination-footer">
+                        <div class="ops-pagination-info" data-ops-info>
+                            Showing 0 to 0 of 0 Semen Orders
+                        </div>
+
+                        <div class="ops-pagination-wrap">
+                            <nav>
+                                <ul class="pagination ops-pagination" data-ops-pagination></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Finance -->
+            <section id="finance" class="tab-pane fade" role="tabpanel" aria-labelledby="finance-tab">
+
+                <div class="card ops-table-card ops-table-box" data-table-title="Finance Records">
+
+                    <div class="card-header bg-transparent">
+                        <div class="ops-toolbar">
+                            <div>
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-cash-coin me-2 text-success"></i>
+                                    Finance Records
+                                </h6>
+                                <small class="text-muted">Filter finance by type</small>
+                            </div>
+
+                            <div class="ops-filter-wrap">
+                                <select class="form-select ops-filter" data-ops-filter>
+                                    <option value="all">All Type</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Farm</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Reference</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr class="ops-row" th:each="f:${finance}" th:attr="data-filter=${f.type}">
+                                    <td class="ops-row-number">1.</td>
+                                    <td th:text="${f.createdAt}">Date</td>
+                                    <td th:text="${f.farm!=null?f.farm.name:'System'}">Farm</td>
+                                    <td>
+                                        <span class="badge"
+                                            th:classappend="${f.type=='INCOME'}?'bg-success':'bg-danger'"
+                                            th:text="${f.type}">
+                                            TYPE
+                                        </span>
+                                    </td>
+                                    <td th:text="${f.category}">Category</td>
+                                    <td th:text="${f.amount}">0</td>
+                                    <td th:text="${f.referenceId}">REF</td>
+                                    <td th:text="${f.description}">Description</td>
+                                </tr>
+
+                                <tr class="ops-no-result d-none">
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-search me-2"></i>
+                                        No finance records found.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="ops-pagination-footer">
+                        <div class="ops-pagination-info" data-ops-info>
+                            Showing 0 to 0 of 0 Finance Records
+                        </div>
+
+                        <div class="ops-pagination-wrap">
+                            <nav>
+                                <ul class="pagination ops-pagination" data-ops-pagination></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Attendance -->
+            <section id="attendance" class="tab-pane fade" role="tabpanel" aria-labelledby="attendance-tab">
+
+                <div class="card ops-table-card ops-table-box" data-table-title="Attendance Records">
+
+                    <div class="card-header bg-transparent">
+                        <div class="ops-toolbar">
+                            <div>
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-calendar-check me-2 text-primary"></i>
+                                    Attendance Records
+                                </h6>
+                                <small class="text-muted">Filter attendance by status</small>
+                            </div>
+
+                            <div class="ops-filter-wrap">
+                                <select class="form-select ops-filter" data-ops-filter>
+                                    <option value="all">All Status</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Farm</th>
+                                    <th>Building</th>
+                                    <th>Clock In</th>
+                                    <th>Clock Out</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr class="ops-row" th:each="a:${attendance}" th:attr="data-filter=${a.status}">
+                                    <td class="ops-row-number">1.</td>
+                                    <td th:text="${a.workDate}">Date</td>
+                                    <td th:text="${a.user.fullName}">Name</td>
+                                    <td th:text="${a.user.role}">Role</td>
+                                    <td
+                                        th:text="${a.user.farm!=null?a.user.farm.name:(a.user.building!=null?a.user.building.farm.name:'-')}">
+                                        Farm
+                                    </td>
+                                    <td th:text="${a.user.building!=null?a.user.building.name:'-'}">
+                                        Building
+                                    </td>
+                                    <td th:text="${a.clockInTime}">Clock In</td>
+                                    <td th:text="${a.clockOutTime}">Clock Out</td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${a.status}">STATUS</span>
+                                    </td>
+                                </tr>
+
+                                <tr class="ops-no-result d-none">
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        <i class="bi bi-search me-2"></i>
+                                        No attendance records found.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="ops-pagination-footer">
+                        <div class="ops-pagination-info" data-ops-info>
+                            Showing 0 to 0 of 0 Attendance Records
+                        </div>
+
+                        <div class="ops-pagination-wrap">
+                            <nav>
+                                <ul class="pagination ops-pagination" data-ops-pagination></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Manager Reports -->
+            <section id="reports" class="tab-pane fade" role="tabpanel" aria-labelledby="reports-tab">
+
+                <div class="card ops-table-card ops-table-box" data-table-title="Manager Reports">
+
+                    <div class="card-header bg-transparent">
+                        <div class="ops-toolbar">
+                            <div>
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-clipboard-data me-2 text-warning"></i>
+                                    Manager Reports
+                                </h6>
+                                <small class="text-muted">Filter shipment override reports</small>
+                            </div>
+
+                            <div class="ops-filter-wrap">
+                                <select class="form-select ops-filter" data-ops-filter>
+                                    <option value="all">All Status</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Invoice</th>
+                                    <th>Farm</th>
+                                    <th>Supplier</th>
+                                    <th>Feed</th>
+                                    <th>Dispatch</th>
+                                    <th>Received</th>
+                                    <th>Status</th>
+                                    <th>Reason</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr class="ops-row" th:each="s:${shipments}" th:attr="data-filter=${s.overrideStatus}">
+                                    <td class="ops-row-number">1.</td>
+                                    <td th:text="${s.invoiceNumber}">INV</td>
+                                    <td th:text="${s.farm.name}">Farm</td>
+                                    <td th:text="${s.supplierName}">Supplier</td>
+                                    <td th:text="${s.displayFeedType}">Feed</td>
+                                    <td th:text="${s.dispatchQuantityKg}">0</td>
+                                    <td th:text="${s.quantityKg}">0</td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${s.overrideStatus}">
+                                            STATUS
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            th:if="${s.managerOverrideReason != null && s.managerOverrideReason.length() > 40}"
+                                            th:text="${#strings.substring(s.managerOverrideReason,0,40) + '...'}">
+                                        </span>
+
+                                        <span
+                                            th:if="${s.managerOverrideReason != null && s.managerOverrideReason.length() <= 40}"
+                                            th:text="${s.managerOverrideReason}">
+                                        </span>
+
+                                        <span th:if="${s.managerOverrideReason == null}" class="text-muted">-</span>
+                                    </td>
+
+                                    <td>
+                                        <div class="ops-action-group"
+                                            th:if="${s.overrideStatus.name()=='PENDING_MANAGER_OVERRIDE'}">
+
+                                            <button type="button" class="btn btn-sm btn-success ops-action-btn"
+                                                data-bs-toggle="modal"
+                                                th:attr="data-bs-target=${'#confirmShipmentModal__' + s.id}">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Confirm
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-danger ops-action-btn"
+                                                data-bs-toggle="modal"
+                                                th:attr="data-bs-target=${'#rejectShipmentModal__' + s.id}">
+                                                <i class="bi bi-x-circle me-1"></i>
+                                                Reject
+                                            </button>
+                                        </div>
+
+                                        <span th:unless="${s.overrideStatus.name()=='PENDING_MANAGER_OVERRIDE'}"
+                                            class="text-muted small">
+                                            No action
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr class="ops-no-result d-none">
+                                    <td colspan="10" class="text-center text-muted py-4">
+                                        <i class="bi bi-search me-2"></i>
+                                        No manager reports found.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="ops-pagination-footer">
+                        <div class="ops-pagination-info" data-ops-info>
+                            Showing 0 to 0 of 0 Manager Reports
+                        </div>
+
+                        <div class="ops-pagination-wrap">
+                            <nav>
+                                <ul class="pagination ops-pagination" data-ops-pagination></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Confirm Shipment Modals -->
+    <th:block th:if="${shipments != null}">
+        <div th:each="s:${shipments}" th:if="${s.overrideStatus.name()=='PENDING_MANAGER_OVERRIDE'}" class="modal fade"
+            th:id="${'confirmShipmentModal__' + s.id}" tabindex="-1" aria-hidden="true">
+
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form th:action="@{/admin/operations/shipments/{id}/confirm(id=${s.id})}" method="post">
+
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold text-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Confirm Shipment
+                            </h5>
+
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            Confirm manager override shipment:
+                            <code th:text="${s.invoiceNumber}">INV</code> ?
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Confirm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- Reject Shipment Modals -->
+    <th:block th:if="${shipments != null}">
+        <div th:each="s:${shipments}" th:if="${s.overrideStatus.name()=='PENDING_MANAGER_OVERRIDE'}" class="modal fade"
+            th:id="${'rejectShipmentModal__' + s.id}" tabindex="-1" aria-hidden="true">
+
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form th:action="@{/admin/operations/shipments/{id}/reject(id=${s.id})}" method="post">
+
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold text-danger">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Reject Shipment
+                            </h5>
+
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <p class="mb-3">
+                                Reject manager override shipment:
+                                <code th:text="${s.invoiceNumber}">INV</code>
+                            </p>
+
+                            <label class="form-label fw-semibold">Reject Reason</label>
+                            <textarea name="reason" class="form-control" rows="3" placeholder="Enter reject reason"
+                                required></textarea>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Reject
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const pageSize = 5;
+
+            const globalSearchInput = document.getElementById('opsGlobalSearchInput');
+
+            const ordersTab = document.getElementById('orders-tab');
+            const orderTypeButtons = document.querySelectorAll('[data-order-type]');
+            const pigOrdersBox = document.getElementById('pigOrdersBox');
+            const semenOrdersBox = document.getElementById('semenOrdersBox');
+
+            const ordersPane = document.getElementById('orders');
+            const financePane = document.getElementById('finance');
+            const attendancePane = document.getElementById('attendance');
+            const reportsPane = document.getElementById('reports');
+
+            const financeTab = document.getElementById('finance-tab');
+            const attendanceTab = document.getElementById('attendance-tab');
+            const reportsTab = document.getElementById('reports-tab');
+
+            const tableSetups = [];
+
+            function deactivateOtherTabs() {
+                [financePane, attendancePane, reportsPane].forEach(function (pane) {
+                    if (pane) {
+                        pane.classList.remove('show', 'active');
+                    }
+                });
+
+                [financeTab, attendanceTab, reportsTab].forEach(function (tab) {
+                    if (tab) {
+                        tab.classList.remove('active');
+                        tab.setAttribute('aria-selected', 'false');
+                    }
+                });
+            }
+
+            function deactivateOrdersTab() {
+                if (ordersPane) {
+                    ordersPane.classList.remove('show', 'active');
+                }
+
+                if (ordersTab) {
+                    ordersTab.classList.remove('active');
+                    ordersTab.setAttribute('aria-selected', 'false');
+                }
+
+                if (semenOrdersBox) {
+                    semenOrdersBox.classList.add('d-none');
+                }
+            }
+
+            if (ordersTab && pigOrdersBox && semenOrdersBox && orderTypeButtons.length > 0) {
+                function applyOrderType(selectedType, label) {
+                    ordersTab.textContent = label;
+                    ordersTab.classList.add('active');
+                    ordersTab.setAttribute('aria-selected', 'true');
+
+                    if (ordersPane) {
+                        ordersPane.classList.add('show', 'active');
+                    }
+
+                    deactivateOtherTabs();
+
+                    if (selectedType === 'pig') {
+                        pigOrdersBox.classList.remove('d-none');
+                        semenOrdersBox.classList.add('d-none');
+                    } else {
+                        pigOrdersBox.classList.add('d-none');
+                        semenOrdersBox.classList.remove('d-none');
+                    }
+
+                    orderTypeButtons.forEach(function (btn) {
+                        btn.classList.toggle('active', btn.getAttribute('data-order-type') === selectedType);
+                    });
+
+                    applyAllTables(true);
+                }
+
+                orderTypeButtons.forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const selectedType = btn.getAttribute('data-order-type');
+                        const label = btn.textContent.trim();
+                        applyOrderType(selectedType, label);
+                    });
+                });
+
+                applyOrderType('pig', 'Pig Orders');
+            }
+
+            [financeTab, attendanceTab, reportsTab].forEach(function (tab) {
+                if (tab) {
+                    tab.addEventListener('shown.bs.tab', function () {
+                        deactivateOrdersTab();
+                        applyAllTables(true);
+                    });
+                }
+            });
+
+            document.querySelectorAll('.ops-table-box').forEach(function (box) {
+                const tableTitle = box.getAttribute('data-table-title') || 'Records';
+                const rows = Array.from(box.querySelectorAll('tbody tr.ops-row'));
+                const filterSelect = box.querySelector('[data-ops-filter]');
+                const noResultRow = box.querySelector('.ops-no-result');
+                const pagination = box.querySelector('[data-ops-pagination]');
+                const info = box.querySelector('[data-ops-info]');
+
+                let currentPage = 1;
+                let filteredRows = [];
+
+                buildFilterOptions();
+
+                function normalize(value) {
+                    return (value || '').toString().trim();
+                }
+
+                function buildFilterOptions() {
+                    if (!filterSelect) {
+                        return;
+                    }
+
+                    const values = [];
+
+                    rows.forEach(function (row) {
+                        const value = normalize(row.getAttribute('data-filter'));
+
+                        if (value && !values.includes(value)) {
+                            values.push(value);
+                        }
+                    });
+
+                    values.sort();
+
+                    values.forEach(function (value) {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = value.replaceAll('_', ' ');
+                        filterSelect.appendChild(option);
+                    });
+                }
+
+                function rowMatchesSearch(row) {
+                    const query = globalSearchInput ? globalSearchInput.value.trim().toLowerCase() : '';
+                    return !query || row.innerText.toLowerCase().includes(query);
+                }
+
+                function rowMatchesFilter(row) {
+                    if (!filterSelect || filterSelect.value === 'all') {
+                        return true;
+                    }
+
+                    return normalize(row.getAttribute('data-filter')) === filterSelect.value;
+                }
+
+                function calculateFilteredRows() {
+                    filteredRows = rows.filter(function (row) {
+                        return rowMatchesSearch(row) && rowMatchesFilter(row);
+                    });
+                }
+
+                function renderRows() {
+                    rows.forEach(function (row) {
+                        row.style.display = 'none';
+                    });
+
+                    const total = filteredRows.length;
+                    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                    if (currentPage > totalPages) {
+                        currentPage = totalPages;
+                    }
+
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const endIndex = Math.min(startIndex + pageSize, total);
+
+                    filteredRows.slice(startIndex, endIndex).forEach(function (row, index) {
+                        row.style.display = '';
+
+                        const numberCell = row.querySelector('.ops-row-number');
+
+                        if (numberCell) {
+                            numberCell.textContent = (startIndex + index + 1) + '.';
+                        }
+                    });
+
+                    if (noResultRow) {
+                        noResultRow.classList.toggle('d-none', total > 0);
+                    }
+
+                    if (info) {
+                        info.textContent = total === 0
+                            ? 'Showing 0 to 0 of 0 ' + tableTitle
+                            : 'Showing ' + (startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' ' + tableTitle;
+                    }
+
+                    renderPagination(totalPages);
+                }
+
+                function createPageItem(label, disabled, active, clickHandler) {
+                    const li = document.createElement('li');
+
+                    li.className = 'page-item'
+                        + (disabled ? ' disabled' : '')
+                        + (active ? ' active' : '');
+
+                    const btn = document.createElement('button');
+                    btn.className = 'page-link';
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+
+                    if (!disabled && typeof clickHandler === 'function') {
+                        btn.addEventListener('click', clickHandler);
+                    }
+
+                    li.appendChild(btn);
+                    return li;
+                }
+
+                function renderPagination(totalPages) {
+                    if (!pagination) {
+                        return;
+                    }
+
+                    pagination.innerHTML = '';
+
+                    if (filteredRows.length <= pageSize) {
+                        return;
+                    }
+
+                    pagination.appendChild(createPageItem(
+                        '<i class="bi bi-chevron-left"></i>',
+                        currentPage === 1,
+                        false,
+                        function () {
+                            currentPage--;
+                            renderRows();
+                        }
+                    ));
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                            pagination.appendChild(createPageItem(
+                                String(i),
+                                false,
+                                i === currentPage,
+                                function () {
+                                    currentPage = i;
+                                    renderRows();
+                                }
+                            ));
+                        } else if (i === currentPage - 3 || i === currentPage + 3) {
+                            pagination.appendChild(createPageItem('...', true, false, null));
+                        }
+                    }
+
+                    pagination.appendChild(createPageItem(
+                        '<i class="bi bi-chevron-right"></i>',
+                        currentPage === totalPages,
+                        false,
+                        function () {
+                            currentPage++;
+                            renderRows();
+                        }
+                    ));
+                }
+
+                function applyTable(resetPage) {
+                    if (resetPage) {
+                        currentPage = 1;
+                    }
+
+                    calculateFilteredRows();
+                    renderRows();
+                }
+
+                if (filterSelect) {
+                    filterSelect.addEventListener('change', function () {
+                        applyTable(true);
+                    });
+                }
+
+                tableSetups.push(applyTable);
+                applyTable(true);
+            });
+
+            function applyAllTables(resetPage) {
+                tableSetups.forEach(function (applyTable) {
+                    applyTable(resetPage);
+                });
+            }
+
+            if (globalSearchInput) {
+                globalSearchInput.addEventListener('input', function () {
+                    applyAllTables(true);
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>
