@@ -276,18 +276,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     var practicalPlaceholders = {
-        name: 'e.g. Aung Min',
-        email: 'e.g. aung.min@company.com',
-        phone: 'e.g. +95 9 123 456 789',
-        address: 'e.g. No. 12, Pyay Road, Yangon',
-        description: 'Enter a clear operational description',
-        code: 'e.g. YGN1',
-        title: 'e.g. Premium Breeding Stock',
-        reason: 'Enter the business reason',
-        comments: 'Enter review comments',
-        notes: 'Add relevant notes',
-        quantity: 'e.g. 25',
-        price: 'e.g. 50000'
+        name: 'Please enter name...........',
+        email: 'Please enter email address...........',
+        phone: 'Please enter phone number...........',
+        address: 'Please enter address...........',
+        description: 'Enter a operational description',
+        code: 'code',
+        title: 'Please enter title...........',
+        reason: 'Enter the business reason............',
+        comments: 'Enter review comments............',
+        notes: 'Add relevant notes.............',
+        quantity: 'Please enter quantity...........',
+        price: 'Please enter price...........',
+        amount: 'Please enter amount...........',
+        total: 'Please enter total...........',
+        date: 'YYYY-MM-DD',
+        time: 'HH:mm',
+        datetime: 'YYYY-MM-DD HH:mm',
+        password: 'Enter a secure password...........',
+        confirm: 'Re-enter the password...........'
     };
 
     document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]), textarea').forEach(function(field) {

@@ -765,9 +765,17 @@
 
                                 <td>
                                     <div class="d-flex gap-2 flex-wrap">
-                                        <button type="button" class="btn btn-sm btn-outline-primary pig-action-btn"
+                                        <!-- <button type="button" class="btn btn-sm btn-outline-primary pig-action-btn"
                                             data-bs-toggle="modal"
                                             th:attr="data-bs-target=${'#editPigModal__' + pig.id}" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                            <span>Edit</span>
+                                        </button> -->
+                                        <button
+                                            th:if="${pig.status.name() != 'BREEDING_SOW' && pig.status.name() != 'BREEDING_BOAR'}"
+                                            type="button" class="btn btn-sm btn-outline-primary pig-action-btn"
+                                            data-bs-toggle="modal"
+                                            th:attr="data-bs-target=${'#editPigModal__' + pig.id}">
                                             <i class="bi bi-pencil-square"></i>
                                             <span>Edit</span>
                                         </button>

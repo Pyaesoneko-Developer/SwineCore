@@ -21,11 +21,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // ---- Eager-join versions for template rendering ----
 
     /** All users with farm and building joined — avoids LazyInitializationException in templates */
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.farm LEFT JOIN FETCH u.building ORDER BY u.name")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.farm LEFT JOIN FETCH u.building ORDER BY u.id DESC")
     List<User> findAllWithAssociations();
 
     /** Users filtered by role with associations eagerly loaded */
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.farm LEFT JOIN FETCH u.building WHERE u.role = :role ORDER BY u.name")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.farm LEFT JOIN FETCH u.building WHERE u.role = :role ORDER BY u.id DESC")
     List<User> findByRoleWithAssociations(@Param("role") Role role);
 
     /** Users in a farm with associations */
@@ -33,7 +33,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByFarmWithAssociations(@Param("farm") Farm farm);
 
     /** Users in a building with farm joined */
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.farm WHERE u.building = :building ORDER BY u.name")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.farm WHERE u.building = :building ORDER BY u.id DESC")
     List<User> findByBuildingWithAssociations(@Param("building") Building building);
 
     /** Staff/supervisors in a building by role */

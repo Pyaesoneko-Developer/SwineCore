@@ -820,7 +820,7 @@ public class ManagerController {
 
             pig.setStatus(PigStatus.FINISHER);
             pig.setListedForSale(false);
-            pig.setSalePrice(null);
+            // pig.setSalePrice(null);
             pig.setListedForSaleDate(null);
 
             pigService.save(pig);
